@@ -1,20 +1,30 @@
+-- StorageSTS
+
+local correctGameId = 1022605215
+local currentGameId = game.PlaceId
+
+if currentGameId == correctGameId then
+
+print("Survive The Slasher Script: Loading..")
+print("Loaded!")
+
 -- Load Rayfield library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Create the main window
 local Window = Rayfield:CreateWindow({
-    Name = "SURVIVE THE SLASHER HUB V3",
-    LoadingTitle = "Survive The Slasher",
+    Name = "SURVIVE THE SLASHER HUB V4",
+    LoadingTitle = "Survive The Slasher V4",
     LoadingSubtitle = "By Jor",
     ConfigurationSaving = {
         Enabled = true,
         FolderName = nil,
-        FileName = "SURVIVE THE SLASHER HUB V3"
+        FileName = "SURVIVE THE SLASHER HUB"
     },
     Discord = {
         Enabled = true,
         Invite = "H66dDfrS4Q",
-        RememberJoins = true 
+        RememberJoins = false 
     },
     KeySystem = true,  -- Enable the key system
     KeySettings = {
@@ -28,11 +38,12 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- Create tabs
-local MainTab = Window:CreateTab("Main", nil)
+local MainTab = Window:CreateTab("Local & Main", nil)
 local SurviTab = Window:CreateTab("Survivor", nil)
 local SlrTab = Window:CreateTab("Slasher", nil)
-local ExtrTab = Window:CreateTab("Extra", nil)
-local CrdTab = Window:CreateTab("Credits", nil)
+local ESTab = Window:CreateTab("ESP", nil)
+local ExtrTab = Window:CreateTab("TP", nil)
+local GameTab = Window:CreateTab("Game", nil)
 
 -- Show a notification
 Rayfield:Notify({
@@ -42,7 +53,7 @@ Rayfield:Notify({
     Image = nil,
     Actions = {
         Ignore = {
-            Name = "Dismiss",
+            Name = "Close",
             Callback = function() end
         }
     }
@@ -77,62 +88,7 @@ coroutine.resume(Rejoin)
     end
 })
 
-local staffProtectionToggle = false
-local staffProtectionConnection
-local localPlayer = game.Players.LocalPlayer
-
--- Main toggle for staff protection
-MainTab:CreateToggle({
-    Name = "Staff Protection",
-    CurrentValue = false,
-    Callback = function(state)
-        staffProtectionToggle = state
-
-        local targetUserIDs = {
-            [362956857] = true,
-            [28724905] = true,
-            [707723783] = true,
-            [331273890] = true,
-            [4791037402] = true,
-            [311314197] = true,
-            [2241157448] = true,
-            [3524879643] = true,
-            [862638016] = true,
-            [316330352] = true,
-            [2977642950] = true,
-            [3120444159] = true,
-            [3047319330] = true
-        }
-
-        local function kickPlayerIfNeeded(joinedPlayer)
-            if targetUserIDs[joinedPlayer.UserId] then
-                localPlayer:Kick("A Developer/Moderator Of This Game Has Joined Your Server, You Have Been Kicked For Your Safety.")
-            end
-        end
-
-        if state then
-            -- Check existing players
-            for _, existingPlayer in ipairs(game.Players:GetPlayers()) do
-                kickPlayerIfNeeded(existingPlayer)
-            end
-
-            -- Check new players
-            staffProtectionConnection = game.Players.PlayerAdded:Connect(kickPlayerIfNeeded)
-        else
-            if staffProtectionConnection then
-                staffProtectionConnection:Disconnect()
-                staffProtectionConnection = nil
-            end
-        end
-    end
-})
-
-MainTab:CreateButton({
-    Name = "Infinite yield",
-    Callback = function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-        end
-})
+MainTab:CreateSection("Local")
 
 local infjToggle = false
 local localPlayer = game.Players.LocalPlayer
@@ -145,6 +101,72 @@ local infJump = MainTab:CreateToggle({
         infjToggle = state
         infiniteJumpEnabled = infjToggle -- Set the infiniteJumpEnabled based on the toggle state
         end
+})
+
+local userInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local sprinting = false
+local normalWalkSpeed = 16  -- Default walk speed
+local sprintWalkSpeed = 32  -- Sprint speed
+local defaultFOV = 70       -- Default camera FOV
+local sprintFOV = 100       -- Camera FOV when sprinting
+local tweenTime = 0.5       -- Time for the FOV transition
+local inputBeganConnection, inputEndedConnection
+
+-- Function to smoothly change FOV
+local function tweenFOV(camera, targetFOV)
+    local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    local goal = {FieldOfView = targetFOV}
+    local tween = TweenService:Create(camera, tweenInfo, goal)
+    tween:Play()
+end
+
+-- Create the toggle
+MainTab:CreateToggle({
+    Name = "Shift To Sprint",
+    Callback = function(state)
+        -- Get player and character
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        local camera = workspace.CurrentCamera
+
+        if state then
+            -- Start handling sprinting
+            inputBeganConnection = userInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+                if not gameProcessedEvent and input.KeyCode == Enum.KeyCode.LeftShift then
+                    humanoid.WalkSpeed = sprintWalkSpeed
+                    tweenFOV(camera, sprintFOV)  -- Smooth FOV increase
+                    sprinting = true
+                end
+            end)
+
+            inputEndedConnection = userInputService.InputEnded:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.LeftShift then
+                    humanoid.WalkSpeed = normalWalkSpeed
+                    tweenFOV(camera, defaultFOV)  -- Smooth FOV reset
+                    sprinting = false
+                end
+            end)
+        else
+            -- Stop handling sprinting
+            if inputBeganConnection then
+                inputBeganConnection:Disconnect()
+                inputBeganConnection = nil
+            end
+            if inputEndedConnection then
+                inputEndedConnection:Disconnect()
+                inputEndedConnection = nil
+            end
+
+            -- Reset walk speed and FOV if player is sprinting
+            if sprinting then
+                humanoid.WalkSpeed = normalWalkSpeed
+                tweenFOV(camera, defaultFOV)  -- Smooth FOV reset
+                sprinting = false
+            end
+        end
+    end
 })
 
 -- Handle infinite jump functionality
@@ -166,31 +188,6 @@ local function resetTabs(tab)
     for _, button in ipairs(tab:GetChildren()) do
         if button:IsA("GuiButton") then
             button:Destroy()
-        end
-    end
-end
-
-local function handleSpeedChange(speed)
-    local player = game.Players.LocalPlayer
-    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-
-    if humanoid then
-        if speed == 20 or speed == 22.5 then
-            resetTabs(SurviTab)
-            Rayfield:Notify({
-                Title = "Warning",
-                Content = "You cannot use Survivor scripts while being slasher!",
-                Duration = 5,
-                Image = nil
-            })
-        elseif speed == 16 then
-            resetTabs(SlrTab)
-            Rayfield:Notify({
-                Title = "Warning",
-                Content = "You cannot use Slasher scripts while being a survivor!",
-                Duration = 5,
-                Image = nil
-            })
         end
     end
 end
@@ -227,71 +224,47 @@ MainTab:CreateButton({
 })
 
 MainTab:CreateButton({
-    Name = "Reset Speed",
+    Name = "Reset Speed & JumpPower",
     Callback = function()
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
         walkSpeedSlider:Set(16)
-
-        local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
-        local textLabel = Instance.new("TextLabel", screenGui)
-        textLabel.Size = UDim2.new(0, 400, 0, 100)
-        textLabel.Position = UDim2.new(-0.5, 0, 0.1, 0) -- Start off-screen to the left
-        textLabel.Text = "Success! Current Speed Has Been Reset"
-        textLabel.TextScaled = true
-        textLabel.BackgroundTransparency = 1
-        textLabel.TextColor3 = Color3.fromRGB(204, 0, 0) -- Lighter, llamative purple
-        textLabel.Font = Enum.Font.GothamBlack
-        textLabel.TextStrokeTransparency = 0
-        textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0) -- Black stroke
-
-        -- Slide-in effect
-        local targetPosition = UDim2.new(0.5, -200, 0.1, 0) -- Final centered position
-        game:GetService("TweenService"):Create(textLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = targetPosition}):Play()
-
-        -- Smooth fade out effect after 4 seconds
-        task.delay(4, function()
-            for i = 0, 1, 0.05 do
-                textLabel.TextTransparency = i
-                textLabel.TextStrokeTransparency = i
-                task.wait(0.05)
-            end
-            textLabel:Destroy()
-        end)
+        jumpPowerSlider:Set(50)
     end
 })
 
-MainTab:CreateButton({
-    Name = "Reset JumpPower",
-    Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
-        jumpPowerSlider:Set(50)
+MainTab:CreateSection("Extra")
 
-        local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
-        local textLabel = Instance.new("TextLabel", screenGui)
-        textLabel.Size = UDim2.new(0, 400, 0, 100)
-        textLabel.Position = UDim2.new(-0.5, 0, 0.1, 0) -- Start off-screen to the left
-        textLabel.Text = "Success! Current JumpPower has been Reset"
-        textLabel.TextScaled = true
-        textLabel.BackgroundTransparency = 1
-        textLabel.TextColor3 = Color3.fromRGB(204, 0, 0) -- Lighter, llamative purple
-        textLabel.Font = Enum.Font.GothamBlack
-        textLabel.TextStrokeTransparency = 0
-        textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0) -- Black stroke
+local antiKickConnection
 
-        -- Slide-in effect
-        local targetPosition = UDim2.new(0.5, -200, 0.1, 0) -- Final centered position
-        game:GetService("TweenService"):Create(textLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = targetPosition}):Play()
-
-        -- Smooth fade out effect after 4 seconds
-        task.delay(4, function()
-            for i = 0, 1, 0.05 do
-                textLabel.TextTransparency = i
-                textLabel.TextStrokeTransparency = i
-                task.wait(0.05)
+MainTab:CreateToggle({
+    Name = "Idle-Mode",
+    Callback = function(state)
+        if state then
+            -- Activate Anti-Kick
+            antiKickConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+                local VirtualUser = game:GetService("VirtualUser")
+                VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                wait(1)
+                VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            end)
+        else
+            -- Deactivate Anti-Kick
+            if antiKickConnection then
+                antiKickConnection:Disconnect()
+                antiKickConnection = nil
             end
-            textLabel:Destroy()
-        end)
+        end
     end
+})
+
+MainTab:CreateParagraph({Title = "", Content = "Idle-Mode: Prevents You From Being Kicked Off The Game After 20 Minutes."}) 
+
+MainTab:CreateButton({
+    Name = "Infinite yield",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+        end
 })
 
 MainTab:CreateToggle({
@@ -360,11 +333,138 @@ MainTab:CreateToggle({
     end
 })
 
+MainTab:CreateSection("Protection")
+
+local staffProtectionToggle = false
+local staffProtectionConnection
+local localPlayer = game.Players.LocalPlayer
+
+-- Main toggle for staff protection
+MainTab:CreateToggle({
+    Name = "Kick If Admin Joins",
+    CurrentValue = false,
+    Callback = function(state)
+        staffProtectionToggle = state
+
+        local targetUserIDs = {
+            [362956857] = true,
+            [28724905] = true,
+            [707723783] = true,
+            [331273890] = true,
+            [4791037402] = true,
+            [311314197] = true,
+            [2241157448] = true,
+            [3524879643] = true,
+            [862638016] = true,
+            [316330352] = true,
+            [2977642950] = true,
+            [3120444159] = true,
+            [3047319330] = true
+        }
+
+        local function kickPlayerIfNeeded(joinedPlayer)
+            if targetUserIDs[joinedPlayer.UserId] then
+                localPlayer:Kick("An Admin From This Game Has Joined Your Server, You Have Been Kicked For Your Safety.")
+            end
+        end
+
+        if state then
+            -- Check existing players
+            for _, existingPlayer in ipairs(game.Players:GetPlayers()) do
+                kickPlayerIfNeeded(existingPlayer)
+            end
+
+            -- Check new players
+            staffProtectionConnection = game.Players.PlayerAdded:Connect(kickPlayerIfNeeded)
+        else
+            if staffProtectionConnection then
+                staffProtectionConnection:Disconnect()
+                staffProtectionConnection = nil
+            end
+        end
+    end
+})
+
+MainTab:CreateParagraph({Title = "", Content = "Kick If Admin Joins: Automatically Kicks You If Admin Joins."})
+
+local staffProtectionToggle = false
+local staffProtectionConnection
+local localPlayer = game.Players.LocalPlayer
+
+-- Main toggle for staff protection
+MainTab:CreateToggle({
+    Name = "Kick If Admin Joins 2",
+    CurrentValue = false,
+    Callback = function(state)
+        staffProtectionToggle = state
+
+        local targetUserIDs = {
+            [362956857] = true,
+            [28724905] = true,
+            [707723783] = true,
+            [331273890] = true,
+            [4791037402] = true,
+            [311314197] = true,
+            [2241157448] = true,
+            [3524879643] = true,
+            [862638016] = true,
+            [316330352] = true,
+            [2977642950] = true,
+            [3120444159] = true,
+            [3047319330] = true
+        }
+
+        local function handlePlayer(joinedPlayer)
+            if targetUserIDs[joinedPlayer.UserId] then
+                -- Show a notification with Yes and No buttons
+                Rayfield:Notify({
+                    Title = "Admin Joined Alert!",
+                    Content = "An Admin has joined your game. Do you want to leave?",
+                    Duration = 3600,
+                    Image = nil,
+                    Actions = {
+                        Yes = {
+                            Name = "Yes",
+                            Callback = function()
+                                localPlayer:Kick("An Admin From This Game Has Joined Your Server, You Choose To Be Kicked For Your Safety.")
+                            end
+                        },
+                        No = {
+                            Name = "No",
+                            Callback = function()
+                            end
+                        }
+                    }
+                })
+            end
+        end
+
+        if state then
+            -- Check existing players
+            for _, existingPlayer in ipairs(game.Players:GetPlayers()) do
+                handlePlayer(existingPlayer)
+            end
+
+            -- Check new players
+            staffProtectionConnection = game.Players.PlayerAdded:Connect(handlePlayer)
+        else
+            if staffProtectionConnection then
+                staffProtectionConnection:Disconnect()
+                staffProtectionConnection = nil
+            end
+        end
+    end
+})
+
+MainTab:CreateParagraph({Title = "", Content = "Kick If Admin Joins 2: Alerts You And Gives Option To Leave If Admin Joins."})
+
+ESTab:CreateSection("ESP")
+
 local espToggle = false
 local espConnection
 
-SurviTab:CreateToggle({
-    Name = "ESP",
+ESTab:CreateToggle({
+    Name = "ESP All",
     CurrentValue = false,
     Callback = function(state)
         local Players = game:GetService("Players")
@@ -377,80 +477,110 @@ SurviTab:CreateToggle({
             local Camera = game:GetService("Workspace").CurrentCamera
             local LocalPlayer = Players.LocalPlayer
 
-            local function createBillboard(player)
+            local function createOutline(player)
                 local character = player.Character
-                if character and character:FindFirstChild("Head") then
-                    local head = character.Head
-                    local billboard = Instance.new("BillboardGui", head)
-                    billboard.Name = "ESP"
-                    billboard.Size = UDim2.new(4, 0, 1.5, 0)
-                    billboard.Adornee = head
-                    billboard.AlwaysOnTop = true
-                    billboard.StudsOffset = Vector3.new(0, 2, 0)
-
-                    local nameLabel = Instance.new("TextLabel", billboard)
-                    nameLabel.Size = UDim2.new(1, 0, 1, 0)
-                    nameLabel.BackgroundTransparency = 0
-                    nameLabel.BackgroundColor3 = Color3.fromRGB(64, 64, 64)
-                    nameLabel.Text = player.Name
-                    nameLabel.TextScaled = true
-                    nameLabel.Font = Enum.Font.SourceSans
-                    nameLabel.TextColor3 = Color3.new(1, 1, 1)
-                    nameLabel.BorderSizePixel = 0
-                    nameLabel.TextStrokeTransparency = 0.5
-                    nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-                    nameLabel.ZIndex = 2
-
-                    local border = Instance.new("Frame", nameLabel)
-                    border.Size = UDim2.new(1, 4, 1, 4)
-                    border.Position = UDim2.new(0, -2, 0, -2)
-                    border.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
-                    border.BorderSizePixel = 0
-                    border.ZIndex = 1
-
-                    local corner = Instance.new("UICorner", nameLabel)
-                    corner.CornerRadius = UDim.new(0, 20)
-
-                    local borderCorner = Instance.new("UICorner", border)
-                    borderCorner.CornerRadius = UDim.new(0, 20)
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local highlight = Instance.new("Highlight", character)
+                    highlight.Name = "ESP"
+                    highlight.Adornee = character
+                    highlight.FillTransparency = 0.3
+                    highlight.OutlineTransparency = 0
+                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0) -- Black outline
                 end
             end
 
-            local function createBox(character)
-                local parts = {"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}
-                for _, partName in pairs(parts) do
-                    local part = character:FindFirstChild(partName)
-                    if part then
-                        local box = Instance.new("BoxHandleAdornment")
-                        box.Name = "ESPBox"
-                        box.Adornee = part
-                        box.Size = part.Size + Vector3.new(0.2, 0.2, 0.2)
-                        box.Color3 = Color3.new(1, 1, 1)
-                        box.Transparency = 1
-                        box.AlwaysOnTop = true
-                        box.ZIndex = 10
-                        box.Parent = part
+            local function updateESP()
+                for _, player in pairs(Players:GetPlayers()) do
+                    -- Ensure player and character exist
+                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
+                        local humanoid = player.Character.Humanoid
+                        local walkSpeed = humanoid.WalkSpeed
+                        local esp = player.Character:FindFirstChild("ESP")
+                        local head = player.Character:FindFirstChild("Head")
+                        local healthGui = head and head:FindFirstChild("HealthGui")
+
+                        -- If ESP does not exist, create it
+                        if not esp then
+                            createOutline(player)
+                            esp = player.Character:FindFirstChild("ESP")
+                        end
+
+                        -- Check if 'esp' was successfully created before modifying it
+                        if esp and esp:IsA("Highlight") then
+                            local color
+                            if healthGui then
+                                color = Color3.fromRGB(204, 204, 0) -- Yellow if HealthGui exists
+                            else
+                                -- Change color based on WalkSpeed if HealthGui is removed
+                                if walkSpeed == 16 then
+                                    color = Color3.fromRGB(0,255,127)
+                                elseif walkSpeed == 5 then
+                                    color = Color3.fromRGB(204, 204, 0)
+                                elseif walkSpeed == 20 or walkSpeed == 22.5 then
+                                    color = Color3.fromRGB(255, 0, 0)
+                                elseif walkSpeed == 24 then
+                                    color = Color3.fromRGB(0,255,127)
+                                elseif walkSpeed == 25 then
+                                    color = Color3.fromRGB(172, 79, 198)
+                                elseif walkSpeed == 32 then
+                                    color = Color3.fromRGB(252, 76, 2)
+                                else
+                                    color = Color3.fromRGB(1, 50, 32)
+                                end
+                            end
+                            esp.FillColor = color -- Adjust fill color based on healthGui or walk speed
+                        end
                     end
                 end
             end
 
-            local function isPartVisible(part)
-                local camera = Camera
-                local partPos = part.Position
-                local _, onScreen = camera:WorldToViewportPoint(partPos)
-
-                if onScreen then
-                    local ray = Ray.new(camera.CFrame.Position, (partPos - camera.CFrame.Position).unit * 500)
-                    local hitPart = workspace:FindPartOnRay(ray, workspace)
-                    return hitPart and hitPart:IsDescendantOf(part.Parent)
-                end
-                return false
+            espConnection = RunService.Heartbeat:Connect(updateESP)
+        else
+            if espConnection then
+                espConnection:Disconnect()
             end
 
-            local function hasSpeedShake(player)
-                local backpack = player.Backpack
+            -- Remove all ESP elements (only Highlight)
+            for _, player in pairs(Players:GetPlayers()) do
+                if player.Character then
+                    local espOutline = player.Character:FindFirstChild("ESP")
+                    if espOutline and espOutline:IsA("Highlight") then
+                        espOutline:Destroy()
+                    end
+                end
+            end
+        end
+    end
+})
+
+local espToggle = false
+local espConnection
+local color = Color3.fromRGB(255, 0, 0) -- Default color for ESP
+
+ESTab:CreateToggle({
+    Name = "ESP Slasher",
+    CurrentValue = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer
+
+        espToggle = state
+
+        if espToggle then
+            local RunService = game:GetService("RunService")
+            local LocalPlayer = Players.LocalPlayer
+
+            local function createOutline(player)
                 local character = player.Character
-                return backpack:FindFirstChild("Speed Shake") or character:FindFirstChild("Speed Shake")
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Name = "ESP"
+                    highlight.Adornee = character
+                    highlight.FillTransparency = 0.3
+                    highlight.OutlineTransparency = 0
+                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0) -- Black outline
+                    highlight.Parent = character
+                end
             end
 
             local function updateESP()
@@ -458,61 +588,15 @@ SurviTab:CreateToggle({
                     if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
                         local humanoid = player.Character.Humanoid
                         local walkSpeed = humanoid.WalkSpeed
-                        local head = player.Character:FindFirstChild("Head")
-                        local esp = head and head:FindFirstChild("ESP")
 
-                        if not esp then
-                            createBillboard(player)
-                            esp = head:FindFirstChild("ESP")
-                        end
-
-                        for _, partName in pairs({"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}) do
-                            local part = player.Character:FindFirstChild(partName)
-                            if part and not part:FindFirstChild("ESPBox") then
-                                createBox(player.Character)
+                        if walkSpeed == 20 or walkSpeed == 22.5 then
+                            local esp = player.Character:FindFirstChild("ESP")
+                            if not esp then
+                                createOutline(player)
                             end
-                        end
-
-                        local color
-                        if hasSpeedShake(player) then
-                            if walkSpeed ~= 5 and walkSpeed ~= 16 and walkSpeed ~= 24 and walkSpeed ~= 25 then
-                                color = Color3.fromRGB(252, 76, 2) -- Orange
-                            else
-                                color = Color3.fromRGB(255, 165, 0) -- White
-                            end
-                        else
-                            if walkSpeed == 16 then
-                                color = Color3.fromRGB(50, 205, 50) -- Lime Green
-                            elseif walkSpeed == 5 then
-                                color = Color3.fromRGB(204, 204, 0) -- Darkish Yellow
-                            elseif walkSpeed > 16 and walkSpeed ~= 24 and walkSpeed ~= 25 then
-                                color = Color3.fromRGB(255, 0, 0) -- Red
-                            elseif walkSpeed == 24 then
-                                color = Color3.fromRGB(50, 205, 50) -- Orange
-                            elseif walkSpeed == 25 then
-                                color = Color3.fromRGB(172, 79, 198) -- Purple
-                            elseif walkSpeed == 20 or walkSpeed == 22.5 then
-                                color = Color3.fromRGB(255, 0, 0) -- Red (if not using Speed Shake)
-                            else
-                                color = Color3.new(255, 165, 0) -- Default to White
-                            end
-                        end
-
-                        if color then
-                            if esp then
-                                esp.TextLabel.TextColor3 = color
-                            end
-                            for _, partName in pairs({"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}) do
-                                local part = player.Character:FindFirstChild(partName)
-                                local box = part and part:FindFirstChild("ESPBox")
-                                if box then
-                                    if isPartVisible(part) then
-                                        box.Transparency = 1
-                                    else
-                                        box.Transparency = 0.4
-                                        box.Color3 = color
-                                    end
-                                end
+                            local highlight = player.Character:FindFirstChild("ESP")
+                            if highlight and highlight:IsA("Highlight") then
+                                highlight.FillColor = color
                             end
                         end
                     end
@@ -525,28 +609,348 @@ SurviTab:CreateToggle({
                 espConnection:Disconnect()
             end
 
-            -- Make sure all ESP elements are removed
+            -- Remove all ESP elements (Highlight only)
             for _, player in pairs(Players:GetPlayers()) do
                 if player.Character then
-                    local head = player.Character:FindFirstChild("Head")
-                    if head then
-                        local esp = head:FindFirstChild("ESP")
-                        if esp then
-                            esp:Destroy()
-                        end
+                    local highlight = player.Character:FindFirstChild("ESP")
+                    if highlight and highlight:IsA("Highlight") then
+                        highlight:Destroy()
                     end
-                    for _, partName in pairs({"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}) do
-                        local part = player.Character:FindFirstChild(partName)
-                        if part then
-                            local box = part:FindFirstChild("ESPBox")
-                            if box then
-                                box:Destroy()
+                end
+            end
+        end
+    end
+})
+
+local espToggle = false
+local espConnection
+
+ESTab:CreateToggle({
+    Name = "ESP Players",
+    CurrentValue = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer
+
+        espToggle = state
+
+        if espToggle then
+            local RunService = game:GetService("RunService")
+            local LocalPlayer = Players.LocalPlayer
+
+            local function createOutline(player)
+                local character = player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local highlight = Instance.new("Highlight", character)
+                    highlight.Name = "ESP"
+                    highlight.Adornee = character
+                    highlight.FillTransparency = 0.3
+                    highlight.OutlineTransparency = 0
+                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+                end
+            end
+
+            local function updateESP()
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
+                        local humanoid = player.Character.Humanoid
+                        local walkSpeed = humanoid.WalkSpeed
+                        local esp = player.Character:FindFirstChild("ESP")
+                        local head = player.Character:FindFirstChild("Head")
+                        local healthGui = head and head:FindFirstChild("HealthGui")
+
+                        if walkSpeed ~= 20 and walkSpeed ~= 22.5 then
+                            if not esp then
+                                createOutline(player)
+                            end
+
+                            local color
+                            if healthGui then
+                                color = Color3.fromRGB(204, 204, 0) -- Yellow if HealthGui exists
+                            else
+                                -- Change color based on WalkSpeed if HealthGui is removed
+                                if walkSpeed == 16 then
+                                    color = Color3.fromRGB(0,255,127) -- Green for 16
+                                elseif walkSpeed == 5 then
+                                    color = Color3.fromRGB(204, 204, 0) -- Yellow for 5
+                                elseif walkSpeed == 24 then
+                                    color = Color3.fromRGB(0,255,127) -- Green for 24
+                                elseif walkSpeed == 25 then
+                                    color = Color3.fromRGB(172, 79, 198) -- Purple for 25
+                                elseif walkSpeed == 32 then
+                                    color = Color3.fromRGB(252, 76, 2)
+                                else 
+                                    color = Color3.fromRGB(1, 50, 32)
+                                end
+                            end
+
+                            if color and esp and esp:IsA("Highlight") then
+                                esp.FillColor = color
+                            end
+                        else
+                            if esp then
+                                esp:Destroy() -- Remove ESP for players with 20 or 22.5 walk speed
                             end
                         end
                     end
                 end
             end
+
+            espConnection = RunService.Heartbeat:Connect(updateESP)
+        else
+            if espConnection then
+                espConnection:Disconnect()
+            end
+
+            for _, player in pairs(Players:GetPlayers()) do
+                if player.Character then
+                    local espOutline = player.Character:FindFirstChild("ESP")
+                    if espOutline and espOutline:IsA("Highlight") then
+                        espOutline:Destroy()
+                    end
+                end
+            end
         end
+    end
+})
+
+local espToggle = false 
+local espConnection
+
+ESTab:CreateToggle({
+    Name = "ESP Coins",
+    CurrentValue = false,
+    Callback = function(state)
+        espToggle = state
+
+        if espToggle then
+            local RunService = game:GetService("RunService")
+            local Workspace = game:GetService("Workspace")
+            local coinModel = Workspace:WaitForChild("CurrentMap"):WaitForChild("Coins")
+
+            local neonColor = Color3.fromRGB(212, 175, 55) -- Neon golden color
+
+            local function createNeonBox(part)
+                if part and part:IsA("BasePart") then
+                    local box = Instance.new("BoxHandleAdornment")
+                    box.Name = "CoinESPBox"
+                    box.Adornee = part
+                    box.Color3 = neonColor
+                    box.Transparency = 0.2 -- More solid for a neon look
+                    box.Size = part.Size + Vector3.new(0.1, 0.1, 0.1)
+                    box.AlwaysOnTop = true
+                    box.ZIndex = 10
+                    box.Parent = part
+
+                    -- Add a neon glow effect
+                    local neonEffect = Instance.new("SelectionBox")
+                    neonEffect.Adornee = part
+                    neonEffect.LineThickness = 0.05
+                    neonEffect.SurfaceColor3 = neonColor
+                    neonEffect.SurfaceTransparency = 0.7
+                    neonEffect.Color3 = neonColor
+                    neonEffect.Parent = part
+                end
+            end
+
+            local function updateESP()
+                for _, part in pairs(coinModel:GetChildren()) do
+                    if part:IsA("BasePart") and not part:FindFirstChild("CoinESPBox") then
+                        createNeonBox(part)
+                    end
+                end
+            end
+
+            espConnection = RunService.Heartbeat:Connect(updateESP)
+        else
+            if espConnection then
+                espConnection:Disconnect()
+            end
+
+            -- Remove all ESP elements (BoxHandleAdornment and SelectionBox)
+            local coinModel = game:GetService("Workspace"):WaitForChild("CurrentMap"):WaitForChild("Coins")
+            for _, part in pairs(coinModel:GetChildren()) do
+                local espBox = part:FindFirstChild("CoinESPBox")
+                if espBox then
+                    espBox:Destroy()
+                end
+                local neonEffect = part:FindFirstChildOfClass("SelectionBox")
+                if neonEffect then
+                    neonEffect:Destroy()
+                end
+            end
+        end
+    end
+})
+
+SurviTab:CreateSection("Survivor Perks")
+
+-- Show a notification
+Rayfield:Notify({
+    Title = "Success!",
+    Content = "Welcome!",
+    Duration = 6.5,
+    Image = nil,
+    Actions = {
+        Ignore = {
+            Name = "Close",
+            Callback = function() end
+        }
+    }
+})
+
+SurviTab:CreateButton({
+    Name = "Heal Me",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        local originalPosition = humanoidRootPart.CFrame.Position
+        local teleporting = true
+
+        -- Check for DisplayGun and other conditions
+        local function checkConditions()
+            if character:FindFirstChild("DisplayGun") then
+                Rayfield:Notify({
+                    Title = "Warning",
+                    Content = "You can't use this in the lobby.",
+                    Duration = 6.5,
+                    Actions = {
+                        Ignore = { Name = "Close", Callback = function() end }
+                    }
+                })
+                return false
+            elseif humanoid.WalkSpeed == 20 or humanoid.WalkSpeed == 22.5 then
+                Rayfield:Notify({
+                    Title = "Warning",
+                    Content = "You can't use this while you are the slasher.",
+                    Duration = 6.5,
+                    Actions = {
+                        Ignore = { Name = "Close", Callback = function() end }
+                    }
+                })
+                return false
+            elseif humanoid.WalkSpeed == 16 then
+                Rayfield:Notify({
+                    Title = "Warning",
+                    Content = "You must be injured by the slasher to use this.",
+                    Duration = 6.5,
+                    Actions = {
+                        Ignore = { Name = "Close", Callback = function() end }
+                    }
+                })
+                return false
+            end
+            return true
+        end
+
+        -- Function to find a valid target player (excluding WalkSpeed 20 and 22.5)
+        local function findValidTargetPlayer()
+            for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+                if otherPlayer ~= player and otherPlayer.Character then
+                    local otherCharacter = otherPlayer.Character
+                    local otherHumanoid = otherCharacter:FindFirstChildOfClass("Humanoid")
+                    local otherHead = otherCharacter:FindFirstChild("Head")
+                    local healthGui = otherHead and otherHead:FindFirstChild("HealthGui")
+                    local displayGun = otherCharacter:FindFirstChild("DisplayGun")
+
+                    -- Only target if they don't have HealthGui, DisplayGun, and WalkSpeed is not 20 or 22.5
+                    if otherHumanoid and not healthGui and not displayGun and (otherHumanoid.WalkSpeed ~= 20 and otherHumanoid.WalkSpeed ~= 22.5) then
+                        return otherPlayer
+                    end
+                end
+            end
+            return nil
+        end
+
+        -- Function to teleport to a valid player
+        local function teleportToTarget(targetPlayer)
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                humanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+            end
+        end
+
+        -- Function to spam teleport to valid targets
+        local function spamTeleport()
+            local targetPlayer = findValidTargetPlayer()
+
+            -- Spam teleport to valid player
+            while teleporting do
+                if targetPlayer then
+                    teleportToTarget(targetPlayer)
+                else
+                    targetPlayer = findValidTargetPlayer() -- Find new target if conditions change
+                end
+
+                -- Check for ForceField
+                if character:FindFirstChild("ForceField") then
+                    teleporting = false
+                    humanoidRootPart.CFrame = CFrame.new(originalPosition) -- Teleport back to original position
+                    break
+                end
+                wait(0.05)
+            end
+        end
+
+        -- Check the conditions before teleporting
+        if checkConditions() then
+            spamTeleport()
+        end
+    end
+})
+
+SurviTab:CreateButton({
+    Name = "Heal A Player",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local RunService = game:GetService("RunService")
+
+        local character = LocalPlayer.Character
+        local originalPosition
+
+        -- Save original position if the character and HumanoidRootPart exist
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            originalPosition = character.HumanoidRootPart.CFrame
+        end
+
+        local function TeleportToPlayer(targetPlayer)
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local targetCharacter = targetPlayer.Character
+                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                    -- Teleport the local player to the target player's position
+                    character.HumanoidRootPart.CFrame = targetCharacter.HumanoidRootPart.CFrame
+                end
+            end
+        end
+
+        local function HealSinglePlayer()
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer then
+                    local targetCharacter = player.Character
+                    if targetCharacter and targetCharacter:FindFirstChild("Head") then
+                        local healthGui = targetCharacter.Head:FindFirstChild("HealthGui")
+                        if healthGui then
+                            -- Teleport loop until HealthGui is gone
+                            while healthGui and healthGui.Parent do
+                                TeleportToPlayer(player)
+                                RunService.Stepped:Wait() -- Wait a frame to prevent script lag
+                                healthGui = targetCharacter.Head:FindFirstChild("HealthGui") -- Update to see if HealthGui is removed
+                            end
+                            -- Once HealthGui is gone, teleport back to original position
+                            if originalPosition and character and character:FindFirstChild("HumanoidRootPart") then
+                                character.HumanoidRootPart.CFrame = originalPosition
+                            end
+                            break -- Exit after teleporting to the first player with HealthGui
+                        end
+                    end
+                end
+            end
+        end
+
+        HealSinglePlayer()
     end
 })
 
@@ -556,40 +960,16 @@ local seslreek = SurviTab:CreateButton({
         local Players = game:GetService("Players")
         local player = Players.LocalPlayer
         local camera = workspace.CurrentCamera
-        local tweenService = game:GetService("TweenService")
+        local spectateActive = true  -- Track if spectate is active
 
-        -- Function to create and display a styled text label
-        local function createStyledTextLabel(text, color)
-            local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-            local textLabel = Instance.new("TextLabel", screenGui)
-            textLabel.Size = UDim2.new(0, 600, 0, 100)
-            textLabel.Position = UDim2.new(0.5, -300, -0.1, 0)  -- Start above the screen
-            textLabel.Text = text
-            textLabel.TextScaled = true
-            textLabel.BackgroundTransparency = 1
-            textLabel.TextColor3 = color
-            textLabel.Font = Enum.Font.GothamBlack
-            textLabel.TextStrokeTransparency = 0
-            textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0) -- Black stroke
-
-            -- Slide-in effect
-            local targetPosition = UDim2.new(0.5, -300, 0.5, -50) -- Centered position
-            local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            local slideInTween = tweenService:Create(textLabel, tweenInfo, {Position = targetPosition})
-            slideInTween:Play()
-
-            -- Smooth fade-out after a delay
-            slideInTween.Completed:Connect(function()
-                task.delay(4, function()
-                    local fadeOutTween = tweenService:Create(textLabel, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1, TextStrokeTransparency = 1})
-                    fadeOutTween:Play()
-                    fadeOutTween.Completed:Connect(function()
-                        textLabel:Destroy()
-                    end)
-                end)
-            end)
-
-            return textLabel
+        -- Function to reset camera to its original state
+        local function resetCamera()
+            camera.CameraType = Enum.CameraType.Custom
+            camera.CameraSubject = player.Character:FindFirstChild("Humanoid")
+            camera.FieldOfView = 70
+            player.CameraMaxZoomDistance = 128
+            player.CameraMinZoomDistance = 0
+            player.CameraMode = Enum.CameraMode.Classic
         end
 
         -- Function to check if there are players with specified walk speeds
@@ -612,434 +992,308 @@ local seslreek = SurviTab:CreateButton({
                     local humanoid = p.Character:FindFirstChild("Humanoid")
                     if table.find(speeds, humanoid.WalkSpeed) then
                         camera.CameraSubject = p.Character
-                        camera.CameraType = Enum.CameraType.Attach
+                        player.CameraMode = Enum.CameraMode.Classic  -- Ensure camera mode is Classic
                         return
                     end
                 end
             end
         end
 
-        -- Function to create a GUI button with a background
-        local function createButton()
+        -- Function to create and handle the exit button
+        local function createExitButton()
             local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
             local button = Instance.new("TextButton", screenGui)
             local uiCorner = Instance.new("UICorner", button)
             
-            button.Size = UDim2.new(0, 250, 0, 75) -- Increased size
-            button.Position = UDim2.new(0.5, -125, 0.8, 0) -- Adjusted position for new size
+            button.Size = UDim2.new(0, 250, 0, 75)
+            button.Position = UDim2.new(0.5, -125, 0.8, 0)
             button.Text = "EXIT"
-            button.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Red background
-            button.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+            button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            button.TextColor3 = Color3.fromRGB(255, 255, 255)
             button.Font = Enum.Font.GothamBlack
             button.TextScaled = true
             button.TextStrokeTransparency = 0
-            button.TextStrokeColor3 = Color3.fromRGB(0, 0, 0) -- Black stroke
-
-            -- Add rounded corners with a radius of 0.15
+            button.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+            
             uiCorner.CornerRadius = UDim.new(0, 15)
 
-            -- Function to move the camera back to normal view
             button.MouseButton1Click:Connect(function()
-                camera.CameraSubject = player.Character.HumanoidRootPart
-                camera.CameraType = Enum.CameraType.Custom
-                screenGui:Destroy()
+                resetCamera()
+                screenGui:Destroy()  -- Destroy the exit button
+                spectateActive = false  -- End spectating
             end)
         end
 
-        -- Check for players with the specified walk speeds before proceeding
+        -- Function to monitor player's death and reset camera
+        local function monitorPlayerDeath()
+            local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.Died:Connect(function()
+                    resetCamera()
+                    -- Destroy the button on death
+                    local playerGui = player:FindFirstChild("PlayerGui")
+                    if playerGui then
+                        local screenGui = playerGui:FindFirstChild("ScreenGui")
+                        if screenGui then
+                            screenGui:Destroy()
+                        end
+                    end
+                    spectateActive = false  -- End spectating
+                end)
+            end
+        end
+
+        -- Function to monitor players' walk speed and reset the camera
+        local function monitorWalkSpeed()
+            while spectateActive do
+                if not hasPlayersWithWalkSpeed({20, 22.5}) then
+                    resetCamera()
+                    -- Destroy the exit button if it's still present
+                    local playerGui = player:FindFirstChild("PlayerGui")
+                    if playerGui then
+                        local screenGui = playerGui:FindFirstChild("ScreenGui")
+                        if screenGui then
+                            screenGui:Destroy()
+                        end
+                    end
+                    break
+                end
+                task.wait(5)  -- Check every 5 seconds
+            end
+        end
+
+        -- Check if there are players with the specified walk speeds
         if hasPlayersWithWalkSpeed({20, 22.5}) then
-            -- Call the function to move the camera
-            moveToPlayerWithWalkSpeed({20, 22.5})
-            
-            -- Call the function to create the button
-            createButton()
+            moveToPlayerWithWalkSpeed({20, 22.5})  -- Move camera to the player
+            createExitButton()  -- Create the exit button
+            task.spawn(monitorWalkSpeed)  -- Start monitoring the players' walk speeds
+            monitorPlayerDeath()  -- Start monitoring player's death
         else
-            -- Show warning message if no player with specified walk speed is found
-            createStyledTextLabel("Warning: Please wait until Slasher is selected or spawns to use this.", Color3.fromRGB(255, 174, 66))
+            -- Show notification if no player is found with the specified walk speeds
+            Rayfield:Notify({
+                Title = "Notice!",
+                Content = "Please Wait Until The Slasher Spawns Or Is Selected To Spectate.",
+                Duration = 6.5,
+                Image = nil,
+                Actions = {
+                    Ignore = {
+                        Name = "Ok",
+                        Callback = function() end
+                    }
+                }
+            })
         end
     end,
 })
 
+SurviTab:CreateSection("Fake GamePass Perks")
+
 SurviTab:CreateButton({
-    Name = "Heal Me",
+    Name = "Fake SpeedJuice Simulation",
     Callback = function()
-        local tweenService = game:GetService("TweenService")
         local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        local humanoid = character:WaitForChild("Humanoid")
-        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-        local backpack = player:WaitForChild("Backpack")
-        local originalPosition = humanoidRootPart.Position
-        local targetPlayer = nil
-        local Players = game:GetService("Players")
-        local teleporting = true
-
-        -- Create a styled text label
-        local function createStyledTextLabel(text, color)
-            local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-            local textLabel = Instance.new("TextLabel", screenGui)
-            textLabel.Size = UDim2.new(0, 600, 0, 100)
-            textLabel.Position = UDim2.new(0.5, -300, -0.1, 0)  -- Start above the screen
-            textLabel.Text = text
-            textLabel.TextScaled = true
-            textLabel.BackgroundTransparency = 1
-            textLabel.TextColor3 = color
-            textLabel.Font = Enum.Font.GothamBlack
-            textLabel.TextStrokeTransparency = 0
-            textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0) -- Black stroke
-
-            -- Slide-in effect
-            local targetPosition = UDim2.new(0.5, -300, 0.5, -50) -- Centered position
-            local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            local slideInTween = tweenService:Create(textLabel, tweenInfo, {Position = targetPosition})
-            slideInTween:Play()
-
-            -- Smooth fade-out after a delay
-            slideInTween.Completed:Connect(function()
-                task.delay(4, function()
-                    local fadeOutTween = tweenService:Create(textLabel, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1, TextStrokeTransparency = 1})
-                    fadeOutTween:Play()
-                    fadeOutTween.Completed:Connect(function()
-                        textLabel:Destroy()
-                    end)
-                end)
-            end)
-
-            return textLabel
-        end
-
-        -- Check for DisplayGun and Speed Shake
-        local function checkConditions()
-            if character:FindFirstChild("DisplayGun") then
-                createStyledTextLabel("Warning: You can't use this in the lobby.", Color3.fromRGB(255, 174, 66))
-                return false
-            elseif (humanoid.WalkSpeed == 20 or humanoid.WalkSpeed == 22.5) and 
-                (not backpack:FindFirstChild("Speed Shake") and not character:FindFirstChild("Speed Shake")) then
-                createStyledTextLabel("Warning: You can't use this while you are slasher.", Color3.fromRGB(255, 174, 66))
-                return false
-            elseif humanoid.WalkSpeed == 16 then
-                createStyledTextLabel("Warning: You must be injured by the slasher to use this.", Color3.fromRGB(255, 174, 66))
-                return false
-            end
-            return true
-        end
-
-        -- Function to find a target player with WalkSpeed of 20 or 22.5
-        local function findTargetPlayer()
-            for _, otherPlayer in pairs(Players:GetPlayers()) do
-                if otherPlayer ~= player and otherPlayer.Character then
-                    local otherHumanoid = otherPlayer.Character:FindFirstChildOfClass("Humanoid")
-                    if otherHumanoid and (otherHumanoid.WalkSpeed == 20 or otherHumanoid.WalkSpeed == 22.5) then
-                        return otherPlayer
-                    end
-                end
-            end
-            return nil
-        end
-
-        -- Function to teleport to the target player
-        local function teleportToTarget()
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                humanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-            end
-        end
-
-        -- Function to spam teleport and handle ForceField check
-        local function spamTeleport()
-            targetPlayer = findTargetPlayer()
-
-            -- Spam teleport to player with WalkSpeed 20 or 22.5
-            while teleporting do
-                if targetPlayer then
-                    teleportToTarget()
-                else
-                    targetPlayer = findTargetPlayer()
-                end
-                
-                -- Check for ForceField
-                if character:FindFirstChild("ForceField") then
-                    teleporting = false
-                    humanoidRootPart.CFrame = CFrame.new(originalPosition) -- Teleport back to original position
-                    break
-                end
-                wait(0.05)
-            end
-        end
-
-        -- Check the conditions before teleporting
-        if checkConditions() then
-            spamTeleport()
-        end
+        local humanoid = player.Character.Humanoid
+        local originalSpeed = humanoid.WalkSpeed
+        
+        humanoid.WalkSpeed = 25
+        wait(6.5)
+        humanoid.WalkSpeed = originalSpeed
     end
 })
 
-local toggle = false
-local connection
-local PseudoAnchor
-local CanInvis = true
-local IsInvisible = false
-local FakeCharacter
-local Part
-local Player = game.Players.LocalPlayer
-local RealCharacter = Player.Character or Player.CharacterAdded:Wait()
-local humanoid = RealCharacter:WaitForChild("Humanoid")
-local Transparency = true
-local NoClip = false
-local LightPart -- Part for light to indicate player's position
-local FaceDecal
-local tweenService = game:GetService("TweenService")
-local originalTransparency = {}
-
-SurviTab:CreateToggle({
-    Name = "Invisible (Disables Game Interaction)",
-    CurrentValue = false,
-    Flag = "SlasherToggle",
-    Callback = function(Value)
-        toggle = Value
-
-        local function createStyledTextLabel(text, color)
-            local screenGui = Instance.new("ScreenGui", Player:WaitForChild("PlayerGui"))
-            local textLabel = Instance.new("TextLabel", screenGui)
-            textLabel.Size = UDim2.new(0, 600, 0, 100)
-            textLabel.Position = UDim2.new(0.5, -300, 0.1, 0)
-            textLabel.Text = text
-            textLabel.TextScaled = true
-            textLabel.BackgroundTransparency = 1
-            textLabel.TextColor3 = color
-            textLabel.Font = Enum.Font.GothamBlack
-            textLabel.TextStrokeTransparency = 0
-            textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-
-            local targetPosition = UDim2.new(0.5, -300, 0.5, -50)
-            local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            local slideInTween = tweenService:Create(textLabel, tweenInfo, {Position = targetPosition})
-            slideInTween:Play()
-
-            slideInTween.Completed:Connect(function()
-                task.delay(4, function()
-                    local fadeOutTween = tweenService:Create(textLabel, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1, TextStrokeTransparency = 1})
-                    fadeOutTween:Play()
-                    fadeOutTween.Completed:Connect(function()
-                        textLabel:Destroy()
-                    end)
-                end)
-            end)
-        end
-
-        -- Ensure invisibility can still proceed
-        if RealCharacter:FindFirstChild("DisplayGun") then
-            createStyledTextLabel("Warning: You can't become invisible in the lobby, wait until game starts.", Color3.fromRGB(255, 174, 66))
-            return
-        elseif humanoid.WalkSpeed == 20 or humanoid.WalkSpeed == 22.5 then
-            createStyledTextLabel("Warning: You can't become invisible while being slasher, it will glitch.", Color3.fromRGB(255, 174, 66))
-            return
-        end
-
-        -- Initialize the fake character
-        local function setupFakeCharacter()
-            RealCharacter.Archivable = true
-            FakeCharacter = RealCharacter:Clone()
-
-            Part = Instance.new("Part", workspace)
-            Part.Anchored = true
-            Part.Size = Vector3.new(200, 1, 200)
-            Part.CFrame = CFrame.new(0, -500, 0)
-            Part.CanCollide = true
-
-            LightPart = Instance.new("Part", workspace)
-            LightPart.Anchored = true
-            LightPart.CanCollide = false
-            LightPart.Shape = Enum.PartType.Ball
-            LightPart.Size = Vector3.new(5, 5, 5)
-            LightPart.CFrame = RealCharacter.HumanoidRootPart.CFrame
-            local light = Instance.new("PointLight", LightPart)
-            light.Brightness = 2
-            light.Range = 10
-
-            FakeCharacter.Parent = workspace
-            FakeCharacter.HumanoidRootPart.CFrame = Part.CFrame * CFrame.new(0, 5, 0)
-
-            if Transparency then
-                for _, v in pairs(FakeCharacter:GetDescendants()) do
-                    if v:IsA("BasePart") then
-                        v.Transparency = 1
-                    elseif v:IsA("Decal") and v.Name == "face" then
-                        v.Transparency = 1 -- Hide face decal
-                    end
-                end
-            end
-
-            for _, v in pairs(RealCharacter:GetChildren()) do
-                if v:IsA("LocalScript") then
-                    local clone = v:Clone()
-                    clone.Disabled = true
-                    clone.Parent = FakeCharacter
-                end
-            end
-
-            PseudoAnchor = FakeCharacter.HumanoidRootPart
-        end
-
-        -- Toggle invisibility
-        local function Invisible(enable)
-            if enable and not IsInvisible then
-                local StoredCF = RealCharacter.HumanoidRootPart.CFrame
-                RealCharacter.HumanoidRootPart.CFrame = FakeCharacter.HumanoidRootPart.CFrame
-                FakeCharacter.HumanoidRootPart.CFrame = StoredCF
-                RealCharacter.Humanoid:UnequipTools()
-                Player.Character = FakeCharacter
-                workspace.CurrentCamera.CameraSubject = FakeCharacter.Humanoid
-                PseudoAnchor = RealCharacter.HumanoidRootPart
-
-                for _, v in pairs(FakeCharacter:GetChildren()) do
-                    if v:IsA("LocalScript") then
-                        v.Disabled = false
-                    end
-                end
-
-                -- Hide real character's face decal
-                for _, v in pairs(RealCharacter:GetChildren()) do
-                    if v:IsA("Decal") and v.Name == "face" then
-                        FaceDecal = v
-                        v.Transparency = 1
-                    end
-                end
-
-                IsInvisible = true
-            elseif not enable and IsInvisible then
-                local StoredCF = FakeCharacter.HumanoidRootPart.CFrame
-                FakeCharacter.HumanoidRootPart.CFrame = RealCharacter.HumanoidRootPart.CFrame
-                RealCharacter.HumanoidRootPart.CFrame = StoredCF
-
-                FakeCharacter.Humanoid:UnequipTools()
-                Player.Character = RealCharacter
-                workspace.CurrentCamera.CameraSubject = RealCharacter.Humanoid
-                PseudoAnchor = FakeCharacter.HumanoidRootPart
-
-                for _, v in pairs(FakeCharacter:GetChildren()) do
-                    if v:IsA("LocalScript") then
-                        v.Disabled = true
-                    end
-                end
-
-                -- Restore real character's face decal
-                if FaceDecal then
-                    FaceDecal.Transparency = 0
-                end
-
-                IsInvisible = false
-            end
-        end
-
-        if toggle then
-            if not FakeCharacter then
-                setupFakeCharacter()
-            end
-            Invisible(true) -- Enable invisibility
-
-            connection = game:GetService("RunService").RenderStepped:Connect(function()
-                if NoClip and FakeCharacter then
-                    FakeCharacter.Humanoid:ChangeState(11) -- NoClip mode
-                end
-                if PseudoAnchor then
-                    PseudoAnchor.CFrame = Part.CFrame * CFrame.new(0, 5, 0) -- Keep the fake character in place
-                end
-
-                if LightPart and RealCharacter and RealCharacter:FindFirstChild("HumanoidRootPart") then
-                    LightPart.CFrame = RealCharacter.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
-                end
-            end)
-        else
-            if IsInvisible then
-                Invisible(false) -- Disable invisibility
-            end
-            if FakeCharacter then
-                FakeCharacter:Destroy()
-                FakeCharacter = nil
-            end
-            if Part then
-                Part:Destroy()
-                Part = nil
-            end
-            if LightPart then
-                LightPart:Destroy()
-                LightPart = nil
-            end
-            if connection then
-                connection:Disconnect()
-                connection = nil
-            end
-        end
+SurviTab:CreateButton({
+    Name = "Fake SpeedShake Simulation",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local humanoid = player.Character.Humanoid
+        local originalSpeed = humanoid.WalkSpeed
+        
+        humanoid.WalkSpeed = 32
+        wait(4.5)
+        humanoid.WalkSpeed = originalSpeed
     end
 })
 
-local tweenService = game:GetService("TweenService")
+SurviTab:CreateButton({
+    Name = "Fake DobuleJump Simulation",
+    Callback = function()
+        local UIS = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
+local character
+local humanoid
+ 
+local canDoubleJump = false
+local hasDoubleJumped = false
+local oldPower
+local time_delay = 0.2
+local jump_multiplier = 1 
+function onJumpRequest()
+	if not character or not humanoid or not character:IsDescendantOf(workspace) or humanoid:GetState() == Enum.HumanoidStateType.Dead then
+		return
+	end
+ 
+	if canDoubleJump and not hasDoubleJumped then
+		hasDoubleJumped = true
+		humanoid.JumpPower = oldPower * jump_multiplier
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end
+ 
+local function characterAdded(new)
+	character = new
+	humanoid = new:WaitForChild("Humanoid")
+	hasDoubleJumped = false
+	canDoubleJump = false
+	oldPower = humanoid.JumpPower
+ 
+	humanoid.StateChanged:connect(function(old, new)
+		if new == Enum.HumanoidStateType.Landed then
+			canDoubleJump = false
+			hasDoubleJumped = false
+			humanoid.JumpPower = oldPower
+		elseif new == Enum.HumanoidStateType.Freefall then
+			wait(time_delay)
+			canDoubleJump = true
+		end
+	end)
+end
+ 
+if player.Character then
+	characterAdded(player.Character)	
+end
+ 
+player.CharacterAdded:connect(characterAdded)
+UIS.JumpRequest:connect(onJumpRequest)
+    end
+})
+
+SlrTab:CreateSection("Slasher Perks")
+
+-- Create the button
+SlrTab:CreateButton({
+    Name = "Slash All",
+    Callback = function()
+
+        local players = game:GetService("Players")
+        local localPlayer = players.LocalPlayer
+
+        -- Check the player's WalkSpeed
+        local function checkValidWalkSpeed()
+            local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                local walkSpeed = humanoid.WalkSpeed
+                return walkSpeed == 20 or walkSpeed == 22.5
+            end
+            return false
+        end
+
+        -- If WalkSpeed is not valid, send notification and stop execution
+        if not checkValidWalkSpeed() then
+            Rayfield:Notify({
+                    Title = "Warning",
+                    Content = "You must be the slasher to use this.",
+                    Duration = 6.5,
+                    Actions = {
+                        Ignore = { Name = "Close", Callback = function() end }
+                    }
+                })
+            return -- Stop the script from running
+        end
+
+        local originalPositions = {}
+
+        -- Equip the only tool in the local player's inventory
+        local function equipOnlyTool()
+            local backpack = localPlayer:WaitForChild("Backpack")
+            local tool = backpack:FindFirstChildOfClass("Tool")
+            if tool then
+                tool.Parent = localPlayer.Character
+            end
+        end
+
+        -- Equip the tool before doing anything else
+        equipOnlyTool()
+
+        -- Check if the player has a tool
+        local function hasTool()
+            local backpack = localPlayer:WaitForChild("Backpack")
+            return backpack:FindFirstChildOfClass("Tool") or (localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Tool"))
+        end
+
+        -- Store the original positions of all players
+        for _, otherPlayer in ipairs(players:GetPlayers()) do
+            if otherPlayer ~= localPlayer and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                originalPositions[otherPlayer] = otherPlayer.Character.HumanoidRootPart.CFrame
+            end
+        end
+
+        -- Bring all players close to the local player
+        local bringConnection
+        bringConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            for _, otherPlayer in ipairs(players:GetPlayers()) do
+                if otherPlayer ~= localPlayer and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    otherPlayer.Character.HumanoidRootPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -2)
+                end
+            end
+        end)
+
+        -- Simulate an autoclicker that clicks 2 times per 0.1 seconds
+        local function startAutoClicker()
+            local clickConnection
+            clickConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                for i = 1, 2 do
+                    -- Simulate a click
+                    mouse1click() -- Simulates a left mouse click
+                end
+                wait(0.05) -- Wait to match 2 clicks per 0.1 seconds
+            end)
+
+            -- Continuously check for tool in inventory and stop when no tool is left
+            spawn(function()
+                while hasTool() do
+                    wait(0.1)
+                end
+
+                -- Disconnect autoclicker and stop bringing players once no tool is found
+                if clickConnection then
+                    clickConnection:Disconnect()
+                end
+                if bringConnection then
+                    bringConnection:Disconnect()
+                end
+                Rayfield:Notify({
+                    Title = "Slashed All!",
+                    Content = "All Players Have Been Killed.",
+                    Duration = 5,
+                    Image = nil
+                })
+            end)
+        end
+
+        -- Start the autoclicker
+        startAutoClicker()
+
+    end
+})
+
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 
--- Beast Mode Button
+-- Slasher Vision Button
 local slrbstm = SlrTab:CreateToggle({
-    Name = "Beast Mode (Fun)",
+    Name = "Slasher Vision",
     CurrentValue = false,
     Flag = "RedVisionToggle",
     Callback = function(Value)
+        local player = game.Players.LocalPlayer
         local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        
-        if not humanoid then return end
-        
-        local function createStyledTextLabel(text, color)
-            local playerGui = player:WaitForChild("PlayerGui")
-            -- Only remove the custom ScreenGui created for the label, not all ScreenGuis
-            local previousGui = playerGui:FindFirstChild("CustomTextLabelGui")
-            if previousGui then
-                previousGui:Destroy()
-            end
 
-            local screenGui = Instance.new("ScreenGui")
-            screenGui.Name = "CustomTextLabelGui"
-            screenGui.Parent = playerGui
+        if not humanoid then
+            return -- Exit if no humanoid is found
+        end -- end if not humanoid
 
-            local textLabel = Instance.new("TextLabel", screenGui)
-            textLabel.Size = UDim2.new(0, 600, 0, 100)
-            textLabel.Position = UDim2.new(0.5, -300, 0.1, 0)
-            textLabel.Text = text
-            textLabel.TextScaled = true
-            textLabel.BackgroundTransparency = 1
-            textLabel.TextColor3 = color
-            textLabel.Font = Enum.Font.GothamBlack
-            textLabel.TextStrokeTransparency = 0
-            textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-
-            local targetPosition = UDim2.new(0.5, -300, 0.5, -50)
-            local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            local slideInTween = tweenService:Create(textLabel, tweenInfo, {Position = targetPosition})
-            slideInTween:Play()
-
-            slideInTween.Completed:Connect(function()
-                task.delay(4, function()
-                    local fadeOutTween = tweenService:Create(textLabel, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1, TextStrokeTransparency = 1})
-                    fadeOutTween:Play()
-                    fadeOutTween.Completed:Connect(function()
-                        screenGui:Destroy()
-                    end)
-                end)
-            end)
-        end
-
-        if player.Character:FindFirstChild("DisplayGun") then
-            createStyledTextLabel("Warning: You can't use this while being in the lobby.", Color3.fromRGB(255, 174, 66))
-            return
-        elseif humanoid.WalkSpeed == 16 then
-            createStyledTextLabel("Warning: You can't use this while being a survivor.", Color3.fromRGB(255, 174, 66))
-            return
-        end
-        
-        -- Beast Mode functionality
         if Value then
-            humanoid.MaxHealth = math.huge
-            humanoid.Health = math.huge
-            humanoid.WalkSpeed = 30
-
+            -- Set screen red
             local redOverlay = Instance.new("ScreenGui", player.PlayerGui)
             redOverlay.Name = "RedOverlay"
             redOverlay.IgnoreGuiInset = true
@@ -1048,285 +1302,81 @@ local slrbstm = SlrTab:CreateToggle({
             redFrame.Size = UDim2.new(1, 0, 1, 0)
             redFrame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
             redFrame.BackgroundTransparency = 0.7
-
         else
-            humanoid.MaxHealth = 100
-            humanoid.Health = 100
-
+            -- Remove red screen when toggled off
             if player.PlayerGui:FindFirstChild("RedOverlay") then
                 player.PlayerGui.RedOverlay:Destroy()
-            end
-        end
-    end
-})
+            end -- end if RedOverlay exists
+        end -- end if Value
+    end -- end callback function
+}) -- end CreateToggle for Slasher Vision
 
--- Kill All Button
+SlrTab:CreateSection("Fake GamePass Perks")
+
 SlrTab:CreateButton({
-    Name = "Kill All",
+    Name = "Fake Extra Slasher Speed",
     Callback = function()
         local player = game.Players.LocalPlayer
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-
-        -- Function to create a styled text label
-        local function createStyledTextLabel(text, color)
-            local playerGui = player:WaitForChild("PlayerGui")
-            local previousGui = playerGui:FindFirstChild("CustomTextLabelGui")
-            if previousGui then
-                previousGui:Destroy()
-            end
-
-            local screenGui = Instance.new("ScreenGui")
-            screenGui.Name = "CustomTextLabelGui"
-            screenGui.Parent = playerGui
-
-            local textLabel = Instance.new("TextLabel")
-            textLabel.Size = UDim2.new(0, 600, 0, 100)
-            textLabel.Position = UDim2.new(0.5, -300, 0.1, 0)
-            textLabel.Text = text
-            textLabel.TextScaled = true
-            textLabel.BackgroundTransparency = 1
-            textLabel.TextColor3 = color
-            textLabel.Font = Enum.Font.GothamBlack
-            textLabel.TextStrokeTransparency = 0
-            textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-            textLabel.Parent = screenGui
-
-            local tweenService = game:GetService("TweenService")
-            local targetPosition = UDim2.new(0.5, -300, 0.5, -50)
-            local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            local slideInTween = tweenService:Create(textLabel, tweenInfo, {Position = targetPosition})
-            slideInTween:Play()
-
-            slideInTween.Completed:Connect(function()
-                task.delay(4, function()
-                    local fadeOutTween = tweenService:Create(textLabel, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1, TextStrokeTransparency = 1})
-                    fadeOutTween:Play()
-                    fadeOutTween.Completed:Connect(function()
-                        screenGui:Destroy()
-                    end)
-                end)
-            end)
-        end
-
-        -- Function to teleport to a player but slightly behind
-        local function teleportToPlayer(targetPlayer)
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local targetHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if targetHRP then
-                    -- Teleport slightly behind the target player (offset by -3 studs on the look vector)
-                    local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 3)
-                    player.Character.HumanoidRootPart.CFrame = offsetCFrame
-                end
-            end
-        end
-
-        -- Function to start teleporting to other players
-        local function startTeleporting()
-            local teleporting = true
-            while teleporting do
-                local validPlayers = {}
-                for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-                    if otherPlayer ~= player and otherPlayer.Character and not otherPlayer.Character:FindFirstChild("DisplayGun") then
-                        table.insert(validPlayers, otherPlayer)
-                    end
-                end
-
-                for _, otherPlayer in pairs(validPlayers) do
-                    teleportToPlayer(otherPlayer)
-                    wait(1)  -- Slight delay between teleports
-                end
-            end
-        end
-
-        -- Check for warnings and start process
-        if player.Character:FindFirstChild("DisplayGun") then
-            createStyledTextLabel("Warning: You can't use this while being in the lobby.", Color3.fromRGB(255, 174, 66))
-            return
-        elseif humanoid and humanoid.WalkSpeed == 16 then
-            createStyledTextLabel("Warning: You can't use this while being a survivor.", Color3.fromRGB(255, 174, 66))
-            return
-        end
-
-        -- Toggle teleporting
-        if _G.teleporting then
-            _G.teleporting = false
-        else
-            createStyledTextLabel("Starting.. Try attacking with the knife by yourself if the autoclicker fails.", Color3.fromRGB(255, 0, 0))
-            task.delay(2, function()
-                _G.teleporting = true
-                startTeleporting()
-            end)
-        end
+        local humanoid = player.Character.Humanoid
+        
+        humanoid.WalkSpeed = 22.5
     end
 })
 
-local players = game:GetService("Players")
-local camera = workspace.CurrentCamera
-local userInputService = game:GetService("UserInputService")
-
-local controlsEnabled = true -- Global flag to manage camera controls
-
-local seslreek = SlrTab:CreateButton({
-    Name = "Seek Players",
+SlrTab:CreateButton({
+    Name = "Fake DobuleJump Simulation",
     Callback = function()
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-        local camera = workspace.CurrentCamera
-        local tweenService = game:GetService("TweenService")
-
-        -- Function to create and display a styled text label
-        local function createStyledTextLabel(text, color)
-            local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-            local textLabel = Instance.new("TextLabel", screenGui)
-            textLabel.Size = UDim2.new(0, 600, 0, 100)
-            textLabel.Position = UDim2.new(0.5, -300, -0.1, 0)  -- Start above the screen
-            textLabel.Text = text
-            textLabel.TextScaled = true
-            textLabel.BackgroundTransparency = 1
-            textLabel.TextColor3 = color
-            textLabel.Font = Enum.Font.GothamBlack
-            textLabel.TextStrokeTransparency = 0
-            textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0) -- Black stroke
-
-            -- Slide-in effect
-            local targetPosition = UDim2.new(0.5, -300, 0.5, -50) -- Centered position
-            local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            local slideInTween = tweenService:Create(textLabel, tweenInfo, {Position = targetPosition})
-            slideInTween:Play()
-
-            -- Smooth fade-out after a delay
-            slideInTween.Completed:Connect(function()
-                task.delay(4, function()
-                    local fadeOutTween = tweenService:Create(textLabel, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1, TextStrokeTransparency = 1})
-                    fadeOutTween:Play()
-                    fadeOutTween.Completed:Connect(function()
-                        textLabel:Destroy()
-                    end)
-                end)
-            end)
-
-            return textLabel
-        end
-
-        -- Function to check for player warnings
-        local function checkPlayerWarnings()
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p.Character and p.Character:FindFirstChild("Humanoid") then
-                    local humanoid = p.Character:FindFirstChild("Humanoid")
-
-                    -- Warning if DisplayGun is found
-                    if p.Character:FindFirstChild("DisplayGun") then
-                        createStyledTextLabel("Warning: You can't use this in the lobby.", Color3.fromRGB(255, 174, 66))
-                        return false
-                    end
-
-                    -- Warning if walk speed is 16
-                    if humanoid.WalkSpeed == 16 then
-                        createStyledTextLabel("Warning: You can't use this while being a survivor.", Color3.fromRGB(255, 174, 66))
-                        return false
-                    end
-                end
-            end
-            return true
-        end
-
-        -- Function to check if there are players with specific walk speeds
-        local function hasPlayersWithWalkSpeed(speeds)
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p.Character and p.Character:FindFirstChild("Humanoid") then
-                    local humanoid = p.Character:FindFirstChild("Humanoid")
-                    if table.find(speeds, humanoid.WalkSpeed) then
-                        return true
-                    end
-                end
-            end
-            return false
-        end
-
-        -- Function to move the camera to a player with specified walk speeds
-        local function moveToPlayerWithWalkSpeed(speeds)
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p.Character and p.Character:FindFirstChild("Humanoid") then
-                    local humanoid = p.Character:FindFirstChild("Humanoid")
-                    if table.find(speeds, humanoid.WalkSpeed) then
-                        camera.CameraSubject = p.Character
-                        camera.CameraType = Enum.CameraType.Attach
-                        return
-                    end
-                end
-            end
-        end
-
-        -- Function to create a GUI button with a background
-        local function createButton()
-            local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-            local button = Instance.new("TextButton", screenGui)
-            local uiCorner = Instance.new("UICorner", button)
-            
-            button.Size = UDim2.new(0, 250, 0, 75) -- Increased size
-            button.Position = UDim2.new(0.5, -125, 0.8, 0) -- Adjusted position for new size
-            button.Text = "EXIT"
-            button.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Red background
-            button.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
-            button.Font = Enum.Font.GothamBlack
-            button.TextScaled = true
-            button.TextStrokeTransparency = 0
-            button.TextStrokeColor3 = Color3.fromRGB(0, 0, 0) -- Black stroke
-
-            -- Add rounded corners with a radius of 0.15
-            uiCorner.CornerRadius = UDim.new(0, 15)
-
-            -- Function to move the camera back to normal view
-            button.MouseButton1Click:Connect(function()
-                camera.CameraSubject = player.Character
-                camera.CameraType = Enum.CameraType.Custom
-                screenGui:Destroy()
-            end)
-        end
-
-        -- Main Execution
-        if checkPlayerWarnings() then
-            if hasPlayersWithWalkSpeed({20, 22.5}) then
-                moveToPlayerWithWalkSpeed({20, 22.5})
-                createButton()
-            else
-                -- Show warning message if no player with specified walk speed is found
-                createStyledTextLabel("Warning: Please wait until Slasher is selected or spawns to use this.", Color3.fromRGB(255, 174, 66))
-            end
-        end
-    end,
-})
-
-
-CrdTab:CreateButton({
-    Name = "Creator: Jor.",
-    Callback = function()
+        local UIS = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
+local character
+local humanoid
+ 
+local canDoubleJump = false
+local hasDoubleJumped = false
+local oldPower
+local time_delay = 0.2
+local jump_multiplier = 1 
+function onJumpRequest()
+	if not character or not humanoid or not character:IsDescendantOf(workspace) or humanoid:GetState() == Enum.HumanoidStateType.Dead then
+		return
+	end
+ 
+	if canDoubleJump and not hasDoubleJumped then
+		hasDoubleJumped = true
+		humanoid.JumpPower = oldPower * jump_multiplier
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end
+ 
+local function characterAdded(new)
+	character = new
+	humanoid = new:WaitForChild("Humanoid")
+	hasDoubleJumped = false
+	canDoubleJump = false
+	oldPower = humanoid.JumpPower
+ 
+	humanoid.StateChanged:connect(function(old, new)
+		if new == Enum.HumanoidStateType.Landed then
+			canDoubleJump = false
+			hasDoubleJumped = false
+			humanoid.JumpPower = oldPower
+		elseif new == Enum.HumanoidStateType.Freefall then
+			wait(time_delay)
+			canDoubleJump = true
+		end
+	end)
+end
+ 
+if player.Character then
+	characterAdded(player.Character)	
+end
+ 
+player.CharacterAdded:connect(characterAdded)
+UIS.JumpRequest:connect(onJumpRequest)
     end
 })
 
-CrdTab:CreateButton({
-    Name = "Scripter: WaveAI & Jor.",
-    Callback = function()
-    end
-})
-
-CrdTab:CreateButton({
-    Name = "Tester: Jor.",
-    Callback = function()
-    end
-})
-
-CrdTab:CreateButton({
-    Name = "GUI Creator/Contributor: shlexware.",
-    Callback = function()
-    end
-})
-
-CrdTab:CreateButton({
-    Name = "GUI Type: Rayfield.",
-    Callback = function()
-    end
-})
+ExtrTab:CreateSection("TP")
 
 ExtrTab:CreateButton({
     Name = "Teleport To Lobby",
@@ -1362,38 +1412,24 @@ ExtrTab:CreateButton({
     end
 })
 
--- Collect All Coins Button
 ExtrTab:CreateButton({
-    Name = "Collect All Coins",
+    Name = "Teleport To VIP Club (MUST UNLOCK FIRST)",
     Callback = function()
         local player = game.Players.LocalPlayer
         local character = player.Character
-        local hrp = character:WaitForChild("HumanoidRootPart")
-        local originalPosition = hrp.CFrame
+        local survivorSpawns = game.Workspace:FindFirstChild("Lobby"):FindFirstChild("LargeSofa")
 
-        local function collectCoins()
-            local coinsModel = workspace:FindFirstChild("CurrentMap"):FindFirstChild("Coins")
-            if coinsModel then
-                local coins = coinsModel:GetChildren()
-                while #coins > 0 do
-                    for _, coin in pairs(coins) do
-                        if coin:IsA("BasePart") and coin.Name == "Coin" then
-                            hrp.CFrame = coin.CFrame
-                            wait(0.05) -- Adjust delay to control teleport speed
-                            coin:Destroy()
-                        end
-                    end
-                    coins = coinsModel:GetChildren()
-                end
+        if survivorSpawns and character then
+            local spawnPoints = survivorSpawns:GetChildren()
+            local randomSpawn = spawnPoints[math.random(1, #spawnPoints)]
+            if randomSpawn:IsA("BasePart") then
+                character:MoveTo(randomSpawn.Position)
             end
-
-            hrp.CFrame = originalPosition
         end
-
-        collectCoins()
     end
 })
 
+ExtrTab:CreateParagraph({Title = "", Content = "Teleport To VIP Club: You Must Go To The Game Tab And Unlock The Vip Club For This To Work."})
 
 ExtrTab:CreateButton({
     Name = "Teleport To Slasher",
@@ -1500,7 +1536,26 @@ ExtrTab:CreateButton({
             local randomPlayer = validPlayers[math.random(1, #validPlayers)]
             teleportToPlayer(randomPlayer)
         else
-            print("No players with DisplayGun found.")
+            print("No.")
+        end
+    end
+})
+
+ExtrTab:CreateParagraph({Title = "", Content = "Teleport To Random Player (Lobby): Teleports You To Players That Are JUST in the lobby."})
+
+ExtrTab:CreateButton({
+    Name = "Teleport To Slasher Spawn",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        local survivorSpawns = game.Workspace:FindFirstChild("CurrentMap"):FindFirstChild("KillerSpawns")
+
+        if survivorSpawns and character then
+            local spawnPoints = survivorSpawns:GetChildren()
+            local randomSpawn = spawnPoints[math.random(1, #spawnPoints)]
+            if randomSpawn:IsA("BasePart") then
+                character:MoveTo(randomSpawn.Position)
+            end
         end
     end
 })
@@ -1544,33 +1599,126 @@ ExtrTab:CreateToggle({
     end
 })
 
-ExtrTab:CreateButton({
-    Name = "Remove Barriers (Map)",
-    Callback = function()
-        local workspace = game:GetService("Workspace")
-        local currentMap = workspace:FindFirstChild("CurrentMap")
+GameTab:CreateSection("Game")
 
-        if currentMap then
-            local otherFolder = currentMap:FindFirstChild("Other")
-            local extraModel = currentMap:FindFirstChild("Extra")
-            local invisWalls = nil
+local screenGui
 
-            if otherFolder then
-                invisWalls = otherFolder:FindFirstChild("InvisWalls")
+GameTab:CreateToggle({
+    Name = "Info",
+    Callback = function(state)
+        if state then
+            -- Create the screen GUI only if it doesn't exist
+            if not screenGui then
+                screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer.PlayerGui)
+
+                -- Slasher Label
+                local slasherTextLabel = Instance.new("TextLabel", screenGui)
+                slasherTextLabel.Size = UDim2.new(0, 250, 0, 50)
+                slasherTextLabel.Position = UDim2.new(0, 20, 1, -170)
+                slasherTextLabel.BackgroundTransparency = 1
+                slasherTextLabel.TextSize = 30
+                slasherTextLabel.Font = Enum.Font.GothamBold
+                slasherTextLabel.TextStrokeTransparency = 0.8
+                slasherTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                slasherTextLabel.Text = "Slasher: Waiting..."
+
+                -- Role Label
+                local roleTextLabel = Instance.new("TextLabel", screenGui)
+                roleTextLabel.Size = UDim2.new(0, 250, 0, 50)
+                roleTextLabel.Position = UDim2.new(0, 20, 1, -120)
+                roleTextLabel.BackgroundTransparency = 1
+                roleTextLabel.TextSize = 30
+                roleTextLabel.Font = Enum.Font.GothamBold
+                roleTextLabel.TextStrokeTransparency = 0.8
+                roleTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                roleTextLabel.Text = "Your Role: Waiting..."
+
+                -- Distance Label (moved to the right)
+                local distanceTextLabel = Instance.new("TextLabel", screenGui)
+                distanceTextLabel.Size = UDim2.new(0, 250, 0, 50)
+                distanceTextLabel.Position = UDim2.new(0, 189, 1, -70) -- Closer to the right
+                distanceTextLabel.BackgroundTransparency = 1
+                distanceTextLabel.TextSize = 30
+                distanceTextLabel.Font = Enum.Font.GothamBold
+                distanceTextLabel.TextStrokeTransparency = 0.8
+                distanceTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                distanceTextLabel.Text = "Your Distance From Slasher: Waiting..."
+
+                -- Update Labels Continuously
+                while state do
+                    wait(1)
+
+                    -- Get slasher player
+                    local slasher = nil
+                    for _, player in pairs(game.Players:GetPlayers()) do
+                        local character = player.Character
+                        if character and character:FindFirstChild("Humanoid") then
+                            local walkspeed = character.Humanoid.WalkSpeed
+                            if walkspeed == 20 or walkspeed == 22.5 then
+                                slasher = player
+                                break
+                            end
+                        end
+                    end
+
+                    -- Update Slasher Label
+                    if slasher then
+                        slasherTextLabel.Text = "Slasher: " .. slasher.Name
+                        slasherTextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red when slasher is found
+                    else
+                        slasherTextLabel.Text = "Slasher: Waiting..."
+                        slasherTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White when waiting
+                    end
+
+                    -- Update Role Label
+                    local localPlayer = game.Players.LocalPlayer
+                    local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
+                    if humanoid then
+                        local walkspeed = humanoid.WalkSpeed
+                        local hasDisplayGun = localPlayer.Character:FindFirstChild("DisplayGun") ~= nil
+                        if walkspeed == 20 or walkspeed == 22.5 then
+                            roleTextLabel.Text = "Your Role: Slasher"
+                            roleTextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red for Slasher
+                        elseif hasDisplayGun then
+                            roleTextLabel.Text = "Your Role: Waiting..."
+                        else
+                            roleTextLabel.Text = "Your Role: Survivor"
+                            roleTextLabel.TextColor3 = Color3.fromRGB(0, 255, 0) -- Green for Survivor
+                        end
+                    end
+
+                    -- Update Distance Label
+                    if slasher then
+                        local slasherPos = slasher.Character.HumanoidRootPart.Position
+                        local playerPos = localPlayer.Character.HumanoidRootPart.Position
+                        local distance = (playerPos - slasherPos).Magnitude
+                        if distance <= 50 then
+                            distanceTextLabel.Text = "Your Distance From Slasher: Close (" .. math.floor(distance) .. " studs)"
+                            distanceTextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red for close
+                        elseif distance <= 100 then
+                            distanceTextLabel.Text = "Your Distance From Slasher: Away (" .. math.floor(distance) .. " studs)"
+                            distanceTextLabel.TextColor3 = Color3.fromRGB(255, 165, 0) -- Orange for away
+                        else
+                            distanceTextLabel.Text = "Your Distance From Slasher: Far (" .. math.floor(distance) .. " studs)"
+                            distanceTextLabel.TextColor3 = Color3.fromRGB(0, 255, 0) -- Green for far
+                        end
+                    else
+                        distanceTextLabel.Text = "Your Distance From Slasher: Waiting..."
+                        distanceTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White when waiting
+                    end
+                end
             end
-
-            if not invisWalls and extraModel and extraModel:IsA("Model") then
-                invisWalls = extraModel:FindFirstChild("InvisWalls")
-            end
-
-            if invisWalls and invisWalls:IsA("Model") then
-                invisWalls:Destroy()
+        else
+            -- Destroy the screen GUI and its labels when toggle is off
+            if screenGui then
+                screenGui:Destroy()
+                screenGui = nil  -- Make sure it can be recreated when toggled back on
             end
         end
     end
 })
 
-ExtrTab:CreateButton({
+GameTab:CreateButton({
     Name = "Remove Barriers (Lobby)",
     Callback = function()
         local workspace = game:GetService("Workspace")
@@ -1598,263 +1746,145 @@ ExtrTab:CreateButton({
     end
 })
 
--- Initial Variables
-local SlrTab = {} -- Replace this with your actual SlrTab instance
-local player = game.Players.LocalPlayer
-local camera = workspace.CurrentCamera
-local players = game.Players:GetPlayers()
-local currentPlayerIndex = nil
-local originalCameraCFrame = camera.CFrame
+GameTab:CreateParagraph({Title = "", Content = "Remove Barriers (Lobby): Removes All Barriers In The LOBBY Only."})
 
--- Create a button for spectating
-SlrTab:CreateButton({
-    Name = "Spectate Player",
+GameTab:CreateButton({
+    Name = "Remove Barriers (Current Map)",
     Callback = function()
-        -- Function to spectate a player
-        local function spectatePlayer(targetPlayer)
-            if targetPlayer and targetPlayer.Character then
-                camera.CameraSubject = targetPlayer.Character.Humanoid
-                camera.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-                originalCameraCFrame = camera.CFrame
-                currentPlayerIndex = table.find(players, targetPlayer)
-            end
-        end
+        local workspace = game:GetService("Workspace")
+        local currentMap = workspace:FindFirstChild("CurrentMap")
+        local invisWalls = nil
 
-        -- Find players without 'DisplayGun'
-        local eligiblePlayers = {}
-        for _, p in pairs(players) do
-            if p.Character and p.Character:FindFirstChild("DisplayGun") == nil and p ~= player then
-                table.insert(eligiblePlayers, p)
+        if currentMap then
+            -- First search in the 'Other' folder
+            local otherFolder = currentMap:FindFirstChild("Other")
+            if otherFolder then
+                invisWalls = otherFolder:FindFirstChild("InvisWalls")
             end
-        end
 
-        -- Switch between eligible players
-        if #eligiblePlayers > 0 then
-            currentPlayerIndex = (currentPlayerIndex or 0) % #eligiblePlayers + 1
-            local targetPlayer = eligiblePlayers[currentPlayerIndex]
-            spectatePlayer(targetPlayer)
-        else
-            print("No eligible players found.")
+            -- If not found, search in the 'Extra' model
+            if not invisWalls then
+                local extraModel = currentMap:FindFirstChild("Extra")
+                if extraModel and extraModel:IsA("Model") then
+                    invisWalls = extraModel:FindFirstChild("InvisWalls")
+                end
+            end
+
+            -- If still not found, search directly in 'CurrentMap'
+            if not invisWalls then
+                invisWalls = currentMap:FindFirstChild("InvisWalls")
+            end
+
+            -- If found, destroy the model
+            if invisWalls and invisWalls:IsA("Model") then
+                invisWalls:Destroy()
+            end
         end
     end
 })
 
--- Handle key press for switching between players
-game:GetService("UserInputService").InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.E then
-        -- Trigger the button callback
-        local spectateButton = SlrTab:FindButton("Spectate Player")
-        if spectateButton then
-            spectateButton:Click()
+GameTab:CreateParagraph({Title = "", Content = "Remove Barriers (Current Map): Removes All Barriers In The CURRENT Map Only."})
+
+GameTab:CreateButton({
+    Name = "Collect All Coins",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        local mapFolder = workspace:FindFirstChild("CurrentMap")
+        
+        if mapFolder then
+            local coinsModel = mapFolder:FindFirstChild("Coins")
+            if coinsModel then
+                local coins = coinsModel:GetChildren()
+                
+                local function collectCoin(coin)
+                    if coin:IsA("BasePart") then
+                        coin.CFrame = hrp.CFrame -- Move coin to player
+                        firetouchinterest(coin, hrp, 0)
+                        coin.CFrame = coin.CFrame * CFrame.new(0, 50, 0) -- Move coin back
+                        firetouchinterest(coin, hrp, 1)
+                    end
+                end
+                
+                for _, coin in ipairs(coins) do
+                    collectCoin(coin)
+                end
+            end
         end
     end
-end)
+})
 
-local players = game:GetService("Players")
-local camera = workspace.CurrentCamera
-local userInputService = game:GetService("UserInputService")
+GameTab:CreateToggle({
+    Name = "Auto Collect Coins",
+    Default = false,
+    Callback = function(state)
+        toggle = state
+        
+        if toggle and not collecting then
+            collecting = true
 
-local currentSpectatedPlayer = nil
-local spectateList = {}
-local previousSpectatedPlayers = {}
+            spawn(function()
+                game.Players.LocalPlayer.CharacterAdded:Connect(function()
+                    if toggle then
+                        collecting = false -- Reset collecting after respawn
+                        wait(1) -- Ensure character is fully loaded
+                        toggle = true -- Resume auto collection after respawn
+                        collecting = true -- Re-enable collecting loop
+                    end
+                end)
 
--- Create GUI Elements
-local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
-local exitButton = Instance.new("TextButton")
-local leftArrowButton = Instance.new("TextButton")
-local rightArrowButton = Instance.new("TextButton")
-local playerLabel = Instance.new("TextLabel")
-local spectateLabel = Instance.new("TextLabel")
+                while toggle do
+                    local player = game.Players.LocalPlayer
+                    local character = player.Character or player.CharacterAdded:Wait()
+                    local hrp = character:WaitForChild("HumanoidRootPart")
+                    local mapFolder = workspace:FindFirstChild("CurrentMap")
 
--- UI Corners for rounded edges
-local uiCorner = Instance.new("UICorner")
-
--- Customize GUI
-screenGui.Name = "SpectateGui"
-screenGui.ResetOnSpawn = false
-
--- Exit Button
-exitButton.Size = UDim2.new(0, 150, 0, 60)
-exitButton.Position = UDim2.new(0.5, -75, 0.85, 0)
-exitButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Red background
-exitButton.BorderSizePixel = 0
-exitButton.Text = "EXIT"
-exitButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
-exitButton.Font = Enum.Font.SourceSansBold
-exitButton.TextSize = 60
-exitButton.Parent = screenGui
-local exitCorner = uiCorner:Clone()
-exitCorner.CornerRadius = UDim.new(0, 8)
-exitCorner.Parent = exitButton
-
--- Left Arrow Button
-leftArrowButton.Size = UDim2.new(0, 50, 0, 50)
-leftArrowButton.Position = UDim2.new(0.35, 0, 0.85, 0)
-leftArrowButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Dark gray background
-leftArrowButton.BorderSizePixel = 0
-leftArrowButton.Text = "< (Q)"
-leftArrowButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
-leftArrowButton.Font = Enum.Font.SourceSansBold
-leftArrowButton.TextSize = 30
-leftArrowButton.Parent = screenGui
-local leftArrowCorner = uiCorner:Clone()
-leftArrowCorner.CornerRadius = UDim.new(0, 8)
-leftArrowCorner.Parent = leftArrowButton
-
--- Right Arrow Button
-rightArrowButton.Size = UDim2.new(0, 50, 0, 50)
-rightArrowButton.Position = UDim2.new(0.65, 0, 0.85, 0)
-rightArrowButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Dark gray background
-rightArrowButton.BorderSizePixel = 0
-rightArrowButton.Text = "> (E)"
-rightArrowButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
-rightArrowButton.Font = Enum.Font.SourceSansBold
-rightArrowButton.TextSize = 30
-rightArrowButton.Parent = screenGui
-local rightArrowCorner = uiCorner:Clone()
-rightArrowCorner.CornerRadius = UDim.new(0, 8)
-rightArrowCorner.Parent = rightArrowButton
-
--- Player Name Label
-playerLabel.Size = UDim2.new(0, 200, 0, 50)
-playerLabel.Position = UDim2.new(0.5, -100, 0.68, 0)
-playerLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Dark gray background
-playerLabel.BorderSizePixel = 0
-playerLabel.Text = ""
-playerLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
-playerLabel.Font = Enum.Font.SourceSansBold
-playerLabel.TextSize = 30
-playerLabel.TextWrapped = true
-playerLabel.TextYAlignment = Enum.TextYAlignment.Center
-playerLabel.Parent = screenGui
-local playerLabelCorner = uiCorner:Clone()
-playerLabelCorner.CornerRadius = UDim.new(0, 8)
-playerLabelCorner.Parent = playerLabel
-
--- Spectating Label
-spectateLabel.Size = UDim2.new(0, 300, 0, 50)
-spectateLabel.Position = UDim2.new(0.5, -150, 0.6, 0)
-spectateLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Dark gray background
-spectateLabel.BorderSizePixel = 0
-spectateLabel.Text = "Currently seeking:"
-spectateLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red text
-spectateLabel.Font = Enum.Font.SourceSansBold
-spectateLabel.TextSize = 30
-spectateLabel.Parent = screenGui
-local spectateLabelCorner = uiCorner:Clone()
-spectateLabelCorner.CornerRadius = UDim.new(0, 8)
-spectateLabelCorner.Parent = spectateLabel
-
--- Function to get a list of players who don't have "DisplayGun"
-local function getAvailablePlayers()
-    local availablePlayers = {}
-    for _, player in pairs(players:GetPlayers()) do
-        if player ~= players.LocalPlayer and player.Character and 
-           not player.Character:FindFirstChild("DisplayGun") and
-           not table.find(previousSpectatedPlayers, player) then
-            table.insert(availablePlayers, player)
+                    if mapFolder then
+                        local coinsModel = mapFolder:FindFirstChild("Coins")
+                        if coinsModel then
+                            for _, coin in pairs(coinsModel:GetChildren()) do
+                                if not toggle then break end
+                                if coin:IsA("BasePart") then
+                                    -- Move coin to player
+                                    coin.CFrame = hrp.CFrame
+                                    firetouchinterest(coin, hrp, 0)
+                                    -- Move coin back
+                                    coin.CFrame = coin.CFrame * CFrame.new(0, 50, 0)
+                                    firetouchinterest(coin, hrp, 1)
+                                end
+                            end
+                        end
+                    end
+                    task.wait(0.01) -- Fast loop to minimize delays
+                end
+                collecting = false
+            end)
+        else
+            collecting = false
         end
     end
-    return availablePlayers
-end
+})
 
--- Function to get a random player from the list
-local function getRandomPlayer()
-    local availablePlayers = getAvailablePlayers()
-    if #availablePlayers > 0 then
-        return availablePlayers[math.random(1, #availablePlayers)]
-    end
-    return nil
-end
-
--- Function to spectate a player
-local function spectatePlayer(player)
-    if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        camera.CameraSubject = player.Character.HumanoidRootPart
-        playerLabel.Text = player.Name
-        currentSpectatedPlayer = player
-
-        -- Add to previously spectated players
-        if not table.find(previousSpectatedPlayers, player) then
-            table.insert(previousSpectatedPlayers, player)
-        end
-    end
-end
-
--- Function to reset the camera
-local function resetCamera()
-    camera.CameraSubject = players.LocalPlayer.Character.HumanoidRootPart
-    playerLabel.Text = ""
-    currentSpectatedPlayer = nil
-end
-
--- Function to handle text size adjustments
-local function adjustTextSize()
-    local playerName = playerLabel.Text
-    local maxLength = 20 -- Adjust as needed
-    local textSize = 30
+-- Define a function for better organization
+local function unlockVIPClub()
+    local workspace = game:GetService("Workspace")
+    local ClubBlock = workspace:FindFirstChild("ClubBlock")
     
-    if #playerName > maxLength then
-        textSize = math.max(14, 30 - (#playerName - maxLength)) -- Minimum text size of 14
+    if ClubBlock then
+        ClubBlock:Destroy()
+    else
+        warn("ClubBlock not found!")
     end
-
-    playerLabel.TextSize = textSize
 end
 
--- Button Actions
-exitButton.MouseButton1Click:Connect(function()
-    resetCamera()
-    screenGui:Destroy() -- Destroy the entire GUI on exit
-end)
+-- Create the button
+GameTab:CreateButton({
+    Name = "Unlock VIP Club",
+    Callback = unlockVIPClub,
+})
 
-leftArrowButton.MouseButton1Click:Connect(function()
-    local prevPlayerIndex = table.find(previousSpectatedPlayers, currentSpectatedPlayer) - 1
-    if prevPlayerIndex < 1 then
-        prevPlayerIndex = #previousSpectatedPlayers
-    end
-    local prevPlayer = previousSpectatedPlayers[prevPlayerIndex]
-    if prevPlayer then
-        spectatePlayer(prevPlayer)
-        adjustTextSize()
-    end
-end)
-
-rightArrowButton.MouseButton1Click:Connect(function()
-    local newPlayer = getRandomPlayer()
-    if newPlayer then
-        spectatePlayer(newPlayer)
-        adjustTextSize()
-    end
-end)
-
--- Keyboard Actions (Q and E for arrows)
-userInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.Q then
-        local prevPlayerIndex = table.find(previousSpectatedPlayers, currentSpectatedPlayer) - 1
-        if prevPlayerIndex < 1 then
-            prevPlayerIndex = #previousSpectatedPlayers
-        end
-        local prevPlayer = previousSpectatedPlayers[prevPlayerIndex]
-        if prevPlayer then
-            spectatePlayer(prevPlayer)
-            adjustTextSize()
-        end
-    elseif input.KeyCode == Enum.KeyCode.E then
-        local newPlayer = getRandomPlayer()
-        if newPlayer then
-            spectatePlayer(newPlayer)
-            adjustTextSize()
-        end
-    elseif input.KeyCode == Enum.KeyCode.Escape then
-        resetCamera()
-        screenGui:Destroy() -- Destroy the GUI on escape
-    end
-end)
-
--- Start by spectating a random player
-local randomPlayer = getRandomPlayer()
-if randomPlayer then
-    spectatePlayer(randomPlayer)
-    adjustTextSize()
+elseif currentGameId ~= correctGameId then
+    local TeleportService = game:GetService("TeleportService")
+    TeleportService:Teleport(1022605215, game.Players.LocalPlayer)
 end
-
