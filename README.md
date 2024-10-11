@@ -6,6 +6,7 @@ local currentGameId = game.PlaceId
 if currentGameId == correctGameId then
 
 print("Survive The Slasher Script: Loading..")
+wait(2)
 print("Loaded!")
 
 -- Load Rayfield library
