@@ -1,12 +1,30 @@
--- StorageSTS
+-- List of banned user IDs
+local bannedIDs = {
+    345673454,  -- Replace with actual user IDs
+    34567234523,
+    456789123
+}
 
-local correctGameId = 1022605215
-local currentGameId = game.PlaceId
+-- Function to check if the player is banned
+local function checkBan(userId)
+    for _, bannedId in ipairs(bannedIDs) do
+        if userId == bannedId then
+            return true
+        end
+    end
+    return false
+end
 
-if currentGameId == correctGameId then
+-- Get Local Player and Check Ban Before Running Script
+local localPlayer = game.Players.LocalPlayer
 
-print("Survive The Slasher Script: Loading..")
-wait(2)
+if checkBan(localPlayer.UserId) then
+    localPlayer:Kick("You have been banned off the GUI. Reason: ")
+    return -- Stop the script from running any further
+end
+
+-- Rest of the script only runs if the player is NOT banned
+print("SuperNatural Script: Loading..")
 print("Loaded!")
 
 -- Load Rayfield library
@@ -14,37 +32,30 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Create the main window
 local Window = Rayfield:CreateWindow({
-    Name = "SURVIVE THE SLASHER HUB V4",
-    LoadingTitle = "Survive The Slasher V4",
-    LoadingSubtitle = "By Jor",
+    Name = "SUPERNATURAL HUB",
+    LoadingTitle = "SuperNatural",
+    LoadingSubtitle = "By Castiel",
     ConfigurationSaving = {
         Enabled = true,
         FolderName = nil,
-        FileName = "SURVIVE THE SLASHER HUB"
+        FileName = "SUPERNATURAL HUB"
     },
     Discord = {
-        Enabled = true,
+        Enabled = false,
         Invite = "H66dDfrS4Q",
         RememberJoins = false 
     },
-    KeySystem = true,  -- Enable the key system
-    KeySettings = {
-        Title = "Key System",
-        Subtitle = "Please Enter A Key To Access The Script!",
-        Note = "The Key is in the discord",
-        FileName = "Key",
-        SaveKey = true,
-        Key = {"NotterPlayjyfoxHACEKA#GSuslrrvi65753eSlsurvielslasherherKey689786549583"}  -- Set your desired key here
-    }
+    KeySystem = false
 })
 
 -- Create tabs
 local MainTab = Window:CreateTab("Local & Main", nil)
-local SurviTab = Window:CreateTab("Survivor", nil)
-local SlrTab = Window:CreateTab("Slasher", nil)
+local SurviTab = Window:CreateTab("Species", nil)
 local ESTab = Window:CreateTab("ESP", nil)
 local ExtrTab = Window:CreateTab("TP", nil)
-local GameTab = Window:CreateTab("Game", nil)
+local SigmaTab = Window:CreateTab("Game", nil)
+local GameTab = Window:CreateTab("Trolling", nil)
+local EvntTab = Window:CreateTab("Info", nil)
 
 -- Show a notification
 Rayfield:Notify({
@@ -99,16 +110,27 @@ local infJump = MainTab:CreateToggle({
     Name = "Infinite Jump",
     Default = false,
     Callback = function(state)
+    local infiniteJumpEnabled = false
+
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if infiniteJumpEnabled then
+        game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
         infjToggle = state
         infiniteJumpEnabled = infjToggle -- Set the infiniteJumpEnabled based on the toggle state
         end
 })
 
-local userInputService = game:GetService("UserInputService")
+-- Create the toggle
+MainTab:CreateToggle({
+    Name = "Ctrl To Sprint (Goes 60% Faster Than Vampires)",
+    Callback = function(state)
+    local userInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local sprinting = false
 local normalWalkSpeed = 16  -- Default walk speed
-local sprintWalkSpeed = 32  -- Sprint speed
+local sprintWalkSpeed = 160  -- Sprint speed
 local defaultFOV = 70       -- Default camera FOV
 local sprintFOV = 100       -- Camera FOV when sprinting
 local tweenTime = 0.5       -- Time for the FOV transition
@@ -121,11 +143,6 @@ local function tweenFOV(camera, targetFOV)
     local tween = TweenService:Create(camera, tweenInfo, goal)
     tween:Play()
 end
-
--- Create the toggle
-MainTab:CreateToggle({
-    Name = "Shift To Sprint",
-    Callback = function(state)
         -- Get player and character
         local player = game.Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
@@ -135,7 +152,7 @@ MainTab:CreateToggle({
         if state then
             -- Start handling sprinting
             inputBeganConnection = userInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-                if not gameProcessedEvent and input.KeyCode == Enum.KeyCode.LeftShift then
+                if not gameProcessedEvent and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
                     humanoid.WalkSpeed = sprintWalkSpeed
                     tweenFOV(camera, sprintFOV)  -- Smooth FOV increase
                     sprinting = true
@@ -143,7 +160,7 @@ MainTab:CreateToggle({
             end)
 
             inputEndedConnection = userInputService.InputEnded:Connect(function(input)
-                if input.KeyCode == Enum.KeyCode.LeftShift then
+                if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
                     humanoid.WalkSpeed = normalWalkSpeed
                     tweenFOV(camera, defaultFOV)  -- Smooth FOV reset
                     sprinting = false
@@ -217,10 +234,17 @@ local jumpPowerSlider = MainTab:CreateSlider({
 })
 
 MainTab:CreateButton({
-    Name = "Unalive Yourself",
+    Name = "Unalive Yourself (Normal)",
     Callback = function()
     game.Players.LocalPlayer.Character.Humanoid.MaxHealth = 0
     game.Players.LocalPlayer.Character.Humanoid.Health = 0
+    end
+})
+
+MainTab:CreateButton({
+    Name = "Unalive Yourself (Bypasses God-Mode)",
+    Callback = function()
+game.Players.LocalPlayer.Character.OtherScripts.DiedEffects.Shatter:FireServer()
     end
 })
 
@@ -265,6 +289,13 @@ MainTab:CreateButton({
     Name = "Infinite yield",
     Callback = function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+        end
+})
+
+MainTab:CreateButton({
+    Name = "Dex Explorer",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/Dq7x5HqJ"))()
         end
 })
 
@@ -342,25 +373,29 @@ local localPlayer = game.Players.LocalPlayer
 
 -- Main toggle for staff protection
 MainTab:CreateToggle({
-    Name = "Kick If Admin Joins",
+    Name = "Leave If Admin Joins",
     CurrentValue = false,
     Callback = function(state)
         staffProtectionToggle = state
 
         local targetUserIDs = {
-            [362956857] = true,
-            [28724905] = true,
-            [707723783] = true,
-            [331273890] = true,
-            [4791037402] = true,
-            [311314197] = true,
-            [2241157448] = true,
-            [3524879643] = true,
-            [862638016] = true,
-            [316330352] = true,
-            [2977642950] = true,
-            [3120444159] = true,
-            [3047319330] = true
+            [508919854] = true,
+            [1663428852] = true,
+            [915981954] = true,
+            [2424185565] = true,
+            [987726614] = true,
+            [311815303] = true,
+            [2000642250] = true,
+            [2005042816] = true,
+            [1355582012] = true,
+            [1905910897] = true,
+            [3214278278] = true,
+            [4800203581] = true,
+            [3745285961] = true,
+            [4248433865] = true,
+            [3925365453] = true,
+            [1583324135] = true,
+            [1465646886] = true
         }
 
         local function kickPlayerIfNeeded(joinedPlayer)
@@ -394,25 +429,29 @@ local localPlayer = game.Players.LocalPlayer
 
 -- Main toggle for staff protection
 MainTab:CreateToggle({
-    Name = "Kick If Admin Joins 2",
+    Name = "Leave If Admin Joins (OPTIONAL)",
     CurrentValue = false,
     Callback = function(state)
         staffProtectionToggle = state
 
         local targetUserIDs = {
-            [362956857] = true,
-            [28724905] = true,
-            [707723783] = true,
-            [331273890] = true,
-            [4791037402] = true,
-            [311314197] = true,
-            [2241157448] = true,
-            [3524879643] = true,
-            [862638016] = true,
-            [316330352] = true,
-            [2977642950] = true,
-            [3120444159] = true,
-            [3047319330] = true
+            [508919854] = true,
+            [1663428852] = true,
+            [915981954] = true,
+            [2424185565] = true,
+            [987726614] = true,
+            [311815303] = true,
+            [2000642250] = true,
+            [2005042816] = true,
+            [1355582012] = true,
+            [1905910897] = true,
+            [3214278278] = true,
+            [4800203581] = true,
+            [3745285961] = true,
+            [4248433865] = true,
+            [3925365453] = true,
+            [1583324135] = true,
+            [1465646886] = true
         }
 
         local function handlePlayer(joinedPlayer)
@@ -465,7 +504,7 @@ local espToggle = false
 local espConnection
 
 ESTab:CreateToggle({
-    Name = "ESP All",
+    Name = "ESP Everyone",
     CurrentValue = false,
     Callback = function(state)
         local Players = game:GetService("Players")
@@ -478,58 +517,43 @@ ESTab:CreateToggle({
             local Camera = game:GetService("Workspace").CurrentCamera
             local LocalPlayer = Players.LocalPlayer
 
-            local function createOutline(player)
+            local function createESP(player)
                 local character = player.Character
                 if character and character:FindFirstChild("HumanoidRootPart") then
                     local highlight = Instance.new("Highlight", character)
                     highlight.Name = "ESP"
                     highlight.Adornee = character
-                    highlight.FillTransparency = 0.3
+                    highlight.FillTransparency = 0.5
                     highlight.OutlineTransparency = 0
+                    highlight.FillColor = Color3.fromRGB(255, 94, 19) -- Orange-reddish color
                     highlight.OutlineColor = Color3.fromRGB(0, 0, 0) -- Black outline
+
+                    -- Create name tag
+                    local head = character:FindFirstChild("Head")
+                    if head then
+                        local billboardGui = Instance.new("BillboardGui", head)
+                        billboardGui.Name = "NameTag"
+                        billboardGui.AlwaysOnTop = true
+                        billboardGui.Size = UDim2.new(0, 200, 0, 50)
+                        billboardGui.StudsOffset = Vector3.new(0, 2, 0)
+
+                        local textLabel = Instance.new("TextLabel", billboardGui)
+                        textLabel.Text = player.Name
+                        textLabel.Font = Enum.Font.SourceSansBold
+                        textLabel.TextSize = 14
+                        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White
+                        textLabel.BackgroundTransparency = 1
+                        textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    end
                 end
             end
 
             local function updateESP()
                 for _, player in pairs(Players:GetPlayers()) do
-                    -- Ensure player and character exist
                     if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
-                        local humanoid = player.Character.Humanoid
-                        local walkSpeed = humanoid.WalkSpeed
                         local esp = player.Character:FindFirstChild("ESP")
-                        local head = player.Character:FindFirstChild("Head")
-                        local healthGui = head and head:FindFirstChild("HealthGui")
-
-                        -- If ESP does not exist, create it
                         if not esp then
-                            createOutline(player)
-                            esp = player.Character:FindFirstChild("ESP")
-                        end
-
-                        -- Check if 'esp' was successfully created before modifying it
-                        if esp and esp:IsA("Highlight") then
-                            local color
-                            if healthGui then
-                                color = Color3.fromRGB(204, 204, 0) -- Yellow if HealthGui exists
-                            else
-                                -- Change color based on WalkSpeed if HealthGui is removed
-                                if walkSpeed == 16 then
-                                    color = Color3.fromRGB(0,255,127)
-                                elseif walkSpeed == 5 then
-                                    color = Color3.fromRGB(204, 204, 0)
-                                elseif walkSpeed == 20 or walkSpeed == 22.5 then
-                                    color = Color3.fromRGB(255, 0, 0)
-                                elseif walkSpeed == 24 then
-                                    color = Color3.fromRGB(0,255,127)
-                                elseif walkSpeed == 25 then
-                                    color = Color3.fromRGB(172, 79, 198)
-                                elseif walkSpeed == 32 then
-                                    color = Color3.fromRGB(252, 76, 2)
-                                else
-                                    color = Color3.fromRGB(1, 50, 32)
-                                end
-                            end
-                            esp.FillColor = color -- Adjust fill color based on healthGui or walk speed
+                            createESP(player)
                         end
                     end
                 end
@@ -541,81 +565,16 @@ ESTab:CreateToggle({
                 espConnection:Disconnect()
             end
 
-            -- Remove all ESP elements (only Highlight)
+            -- Remove all ESP elements
             for _, player in pairs(Players:GetPlayers()) do
                 if player.Character then
                     local espOutline = player.Character:FindFirstChild("ESP")
-                    if espOutline and espOutline:IsA("Highlight") then
+                    local nameTag = player.Character:FindFirstChild("Head"):FindFirstChild("NameTag")
+                    if espOutline then
                         espOutline:Destroy()
                     end
-                end
-            end
-        end
-    end
-})
-
-local espToggle = false
-local espConnection
-local color = Color3.fromRGB(255, 0, 0) -- Default color for ESP
-
-ESTab:CreateToggle({
-    Name = "ESP Slasher",
-    CurrentValue = false,
-    Callback = function(state)
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-
-        espToggle = state
-
-        if espToggle then
-            local RunService = game:GetService("RunService")
-            local LocalPlayer = Players.LocalPlayer
-
-            local function createOutline(player)
-                local character = player.Character
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    local highlight = Instance.new("Highlight")
-                    highlight.Name = "ESP"
-                    highlight.Adornee = character
-                    highlight.FillTransparency = 0.3
-                    highlight.OutlineTransparency = 0
-                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0) -- Black outline
-                    highlight.Parent = character
-                end
-            end
-
-            local function updateESP()
-                for _, player in pairs(Players:GetPlayers()) do
-                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
-                        local humanoid = player.Character.Humanoid
-                        local walkSpeed = humanoid.WalkSpeed
-
-                        if walkSpeed == 20 or walkSpeed == 22.5 then
-                            local esp = player.Character:FindFirstChild("ESP")
-                            if not esp then
-                                createOutline(player)
-                            end
-                            local highlight = player.Character:FindFirstChild("ESP")
-                            if highlight and highlight:IsA("Highlight") then
-                                highlight.FillColor = color
-                            end
-                        end
-                    end
-                end
-            end
-
-            espConnection = RunService.Heartbeat:Connect(updateESP)
-        else
-            if espConnection then
-                espConnection:Disconnect()
-            end
-
-            -- Remove all ESP elements (Highlight only)
-            for _, player in pairs(Players:GetPlayers()) do
-                if player.Character then
-                    local highlight = player.Character:FindFirstChild("ESP")
-                    if highlight and highlight:IsA("Highlight") then
-                        highlight:Destroy()
+                    if nameTag then
+                        nameTag:Destroy()
                     end
                 end
             end
@@ -627,7 +586,7 @@ local espToggle = false
 local espConnection
 
 ESTab:CreateToggle({
-    Name = "ESP Players",
+    Name = "ESP By Specie",
     CurrentValue = false,
     Callback = function(state)
         local Players = game:GetService("Players")
@@ -637,60 +596,78 @@ ESTab:CreateToggle({
 
         if espToggle then
             local RunService = game:GetService("RunService")
+            local Camera = game:GetService("Workspace").CurrentCamera
             local LocalPlayer = Players.LocalPlayer
 
-            local function createOutline(player)
+            local speciesColors = {
+                WITCH = Color3.fromRGB(128, 0, 128),       -- Purple
+                WEREWOLF = Color3.fromRGB(255, 255, 0),    -- Yellow
+                VAMPIRE = Color3.fromRGB(255, 0, 0),       -- Red
+                SIPHONER = Color3.fromRGB(255,105,180),    -- Pink
+                CHAMELEON = Color3.fromRGB(0, 255, 0),     -- Green
+                PHOENIX = Color3.fromRGB(255, 165, 0),     -- Orange
+                ORIGINAL = Color3.fromRGB(139, 0, 0),      -- Dark Red
+                DEMON = Color3.fromRGB(75, 0, 130),        -- Dark Purple
+                HYBRID = Color3.fromRGB(0, 255, 255),      -- Cyan
+                HERETIC = Color3.fromRGB(219, 112, 147),   -- Mix of pink and purple
+                MORTAL = Color3.fromRGB(255, 255, 255),    --  White
+            }
+
+            local function createESP(player, species, color)
                 local character = player.Character
                 if character and character:FindFirstChild("HumanoidRootPart") then
                     local highlight = Instance.new("Highlight", character)
                     highlight.Name = "ESP"
                     highlight.Adornee = character
-                    highlight.FillTransparency = 0.3
+                    highlight.FillTransparency = 0.5
                     highlight.OutlineTransparency = 0
-                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+                    highlight.FillColor = color
+                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0) -- Black outline
+
+                    -- Create name tag
+                    local head = character:FindFirstChild("Head")
+                    if head then
+                        local billboardGui = Instance.new("BillboardGui", head)
+                        billboardGui.Name = "NameTag"
+                        billboardGui.AlwaysOnTop = true
+                        billboardGui.Size = UDim2.new(0, 200, 0, 50)
+                        billboardGui.StudsOffset = Vector3.new(0, 2, 0)
+
+                        local textLabel = Instance.new("TextLabel", billboardGui)
+                        textLabel.Text = species
+                        textLabel.Font = Enum.Font.SourceSansBold
+                        textLabel.TextSize = 14
+                        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White
+                        textLabel.BackgroundTransparency = 1
+                        textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    end
                 end
             end
 
             local function updateESP()
                 for _, player in pairs(Players:GetPlayers()) do
                     if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
-                        local humanoid = player.Character.Humanoid
-                        local walkSpeed = humanoid.WalkSpeed
-                        local esp = player.Character:FindFirstChild("ESP")
-                        local head = player.Character:FindFirstChild("Head")
-                        local healthGui = head and head:FindFirstChild("HealthGui")
-
-                        if walkSpeed ~= 20 and walkSpeed ~= 22.5 then
-                            if not esp then
-                                createOutline(player)
-                            end
-
-                            local color
-                            if healthGui then
-                                color = Color3.fromRGB(204, 204, 0) -- Yellow if HealthGui exists
-                            else
-                                -- Change color based on WalkSpeed if HealthGui is removed
-                                if walkSpeed == 16 then
-                                    color = Color3.fromRGB(0,255,127) -- Green for 16
-                                elseif walkSpeed == 5 then
-                                    color = Color3.fromRGB(204, 204, 0) -- Yellow for 5
-                                elseif walkSpeed == 24 then
-                                    color = Color3.fromRGB(0,255,127) -- Green for 24
-                                elseif walkSpeed == 25 then
-                                    color = Color3.fromRGB(172, 79, 198) -- Purple for 25
-                                elseif walkSpeed == 32 then
-                                    color = Color3.fromRGB(252, 76, 2)
-                                else 
-                                    color = Color3.fromRGB(1, 50, 32)
+                        local overhead = player.Character:FindFirstChild("Head"):FindFirstChild("OverHead")
+                        if overhead then
+                            local speciesLabel = overhead:FindFirstChild("Species")
+                            if speciesLabel and speciesLabel:IsA("TextLabel") then
+                                local species = speciesLabel.Text
+                                local color = speciesColors[species]
+                                if color then
+                                    local esp = player.Character:FindFirstChild("ESP")
+                                    if esp then
+                                        -- Update existing ESP color and text
+                                        esp.FillColor = color
+                                    else
+                                        createESP(player, species, color)
+                                    end
+                                    
+                                    local nameTag = player.Character:FindFirstChild("Head"):FindFirstChild("NameTag")
+                                    if nameTag and nameTag:FindFirstChild("TextLabel") then
+                                        nameTag.TextLabel.Text = species
+                                        nameTag.TextLabel.TextColor3 = color
+                                    end
                                 end
-                            end
-
-                            if color and esp and esp:IsA("Highlight") then
-                                esp.FillColor = color
-                            end
-                        else
-                            if esp then
-                                esp:Destroy() -- Remove ESP for players with 20 or 22.5 walk speed
                             end
                         end
                     end
@@ -703,11 +680,16 @@ ESTab:CreateToggle({
                 espConnection:Disconnect()
             end
 
+            -- Remove all ESP elements
             for _, player in pairs(Players:GetPlayers()) do
                 if player.Character then
                     local espOutline = player.Character:FindFirstChild("ESP")
-                    if espOutline and espOutline:IsA("Highlight") then
+                    local nameTag = player.Character:FindFirstChild("Head"):FindFirstChild("NameTag")
+                    if espOutline then
                         espOutline:Destroy()
+                    end
+                    if nameTag then
+                        nameTag:Destroy()
                     end
                 end
             end
@@ -715,49 +697,61 @@ ESTab:CreateToggle({
     end
 })
 
-local espToggle = false 
+local espToggle = false
 local espConnection
 
 ESTab:CreateToggle({
-    Name = "ESP Coins",
+    Name = "ESP Friends",
     CurrentValue = false,
     Callback = function(state)
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
         espToggle = state
 
         if espToggle then
             local RunService = game:GetService("RunService")
-            local Workspace = game:GetService("Workspace")
-            local coinModel = Workspace:WaitForChild("CurrentMap"):WaitForChild("Coins")
 
-            local neonColor = Color3.fromRGB(212, 175, 55) -- Neon golden color
+            local function createESPForFriend(friend)
+                local character = friend.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    -- Highlight
+                    local highlight = Instance.new("Highlight", character)
+                    highlight.Name = "ESP"
+                    highlight.Adornee = character
+                    highlight.FillTransparency = 0.5
+                    highlight.OutlineTransparency = 0
+                    highlight.FillColor = Color3.fromRGB(0, 255, 0) -- Green
+                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0) -- Black outline
 
-            local function createNeonBox(part)
-                if part and part:IsA("BasePart") then
-                    local box = Instance.new("BoxHandleAdornment")
-                    box.Name = "CoinESPBox"
-                    box.Adornee = part
-                    box.Color3 = neonColor
-                    box.Transparency = 0.2 -- More solid for a neon look
-                    box.Size = part.Size + Vector3.new(0.1, 0.1, 0.1)
-                    box.AlwaysOnTop = true
-                    box.ZIndex = 10
-                    box.Parent = part
+                    -- Name Tag
+                    local head = character:FindFirstChild("Head")
+                    if head then
+                        local billboardGui = Instance.new("BillboardGui", head)
+                        billboardGui.Name = "NameTag"
+                        billboardGui.AlwaysOnTop = true
+                        billboardGui.Size = UDim2.new(0, 200, 0, 50)
+                        billboardGui.StudsOffset = Vector3.new(0, 2, 0)
 
-                    -- Add a neon glow effect
-                    local neonEffect = Instance.new("SelectionBox")
-                    neonEffect.Adornee = part
-                    neonEffect.LineThickness = 0.05
-                    neonEffect.SurfaceColor3 = neonColor
-                    neonEffect.SurfaceTransparency = 0.7
-                    neonEffect.Color3 = neonColor
-                    neonEffect.Parent = part
+                        local textLabel = Instance.new("TextLabel", billboardGui)
+                        textLabel.Text = friend.Name
+                        textLabel.Font = Enum.Font.SourceSansBold
+                        textLabel.TextSize = 14
+                        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White
+                        textLabel.BackgroundTransparency = 1
+                        textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    end
                 end
             end
 
             local function updateESP()
-                for _, part in pairs(coinModel:GetChildren()) do
-                    if part:IsA("BasePart") and not part:FindFirstChild("CoinESPBox") then
-                        createNeonBox(part)
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and LocalPlayer:IsFriendsWith(player.UserId) and player.Character and player.Character:FindFirstChild("Humanoid") then
+                        local esp = player.Character:FindFirstChild("ESP")
+                        local nameTag = player.Character:FindFirstChild("Head"):FindFirstChild("NameTag")
+                        if not esp then
+                            createESPForFriend(player)
+                        end
                     end
                 end
             end
@@ -768,23 +762,26 @@ ESTab:CreateToggle({
                 espConnection:Disconnect()
             end
 
-            -- Remove all ESP elements (BoxHandleAdornment and SelectionBox)
-            local coinModel = game:GetService("Workspace"):WaitForChild("CurrentMap"):WaitForChild("Coins")
-            for _, part in pairs(coinModel:GetChildren()) do
-                local espBox = part:FindFirstChild("CoinESPBox")
-                if espBox then
-                    espBox:Destroy()
-                end
-                local neonEffect = part:FindFirstChildOfClass("SelectionBox")
-                if neonEffect then
-                    neonEffect:Destroy()
+            -- Remove all ESP elements from friends
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and LocalPlayer:IsFriendsWith(player.UserId) and player.Character then
+                    local espOutline = player.Character:FindFirstChild("ESP")
+                    local nameTag = player.Character:FindFirstChild("Head"):FindFirstChild("NameTag")
+                    if espOutline then
+                        espOutline:Destroy()
+                    end
+                    if nameTag then
+                        nameTag:Destroy()
+                    end
                 end
             end
         end
     end
 })
 
-SurviTab:CreateSection("Survivor Perks")
+SurviTab:CreateParagraph({Title = "Note", Content = "All Species Unlocked By This Tab Will Disappear From Inventory Once You Leave The Game!"})
+
+SurviTab:CreateSection("Shuffle Species")
 
 -- Show a notification
 Rayfield:Notify({
@@ -800,703 +797,280 @@ Rayfield:Notify({
     }
 })
 
+-- Shuffle Species Section
 SurviTab:CreateButton({
-    Name = "Heal Me",
+    Name = "Get All Shuffle Species",
     Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local speciesFolder = player:WaitForChild("OwnedSpecies")
+        local speciesList = {"Witch", "Werewolf", "Vampire", "Siphoner", "Chameleon"}
+
+        for _, speciesName in ipairs(speciesList) do
+            local species = speciesFolder:FindFirstChild(speciesName)
+            if species and species:IsA("BoolValue") then
+                species.Value = true
+            end
+        end
+    end
+})
+
+SurviTab:CreateButton({
+    Name = "Remove All Shuffle Species",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local speciesFolder = player:WaitForChild("OwnedSpecies")
+        local speciesList = {"Witch", "Werewolf", "Vampire", "Siphoner", "Chameleon"}
+
+        for _, speciesName in ipairs(speciesList) do
+            local species = speciesFolder:FindFirstChild(speciesName)
+            if species and species:IsA("BoolValue") then
+                species.Value = false
+            end
+        end
+    end
+})
+
+local shuffleSpecies = {"Witch", "Werewolf", "Vampire", "Siphoner", "Chameleon"}
+for _, speciesName in ipairs(shuffleSpecies) do
+    SurviTab:CreateButton({
+        Name = "Unlock " .. speciesName,
+        Callback = function()
+            local player = game:GetService("Players").LocalPlayer
+            local speciesFolder = player:WaitForChild("OwnedSpecies")
+            local species = speciesFolder:FindFirstChild(speciesName)
+            if species and species:IsA("BoolValue") then
+                species.Value = true
+            end
+        end
+    })
+end
+
+-- Gamepass & Other Species Section
+SurviTab:CreateSection("Gamepass & Other Species")
+
+SurviTab:CreateButton({
+    Name = "Get All Gamepass & Other Species",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local speciesFolder = player:WaitForChild("OwnedSpecies")
+        local speciesList = {"Phoenix", "Original", "Demon"}
+
+        for _, speciesName in ipairs(speciesList) do
+            local species = speciesFolder:FindFirstChild(speciesName)
+            if species and species:IsA("BoolValue") then
+                species.Value = true
+            end
+        end
+    end
+})
+
+SurviTab:CreateButton({
+    Name = "Remove All Gamepass & Other Species",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local speciesFolder = player:WaitForChild("OwnedSpecies")
+        local speciesList = {"Phoenix", "Original"}
+
+        for _, speciesName in ipairs(speciesList) do
+            local species = speciesFolder:FindFirstChild(speciesName)
+            if species and species:IsA("BoolValue") then
+                species.Value = false
+            end
+        end
+    end
+})
+
+local gamepassSpecies = {"Phoenix", "Original"}
+for _, speciesName in ipairs(gamepassSpecies) do
+    SurviTab:CreateButton({
+        Name = "Unlock " .. speciesName,
+        Callback = function()
+            local player = game:GetService("Players").LocalPlayer
+            local speciesFolder = player:WaitForChild("OwnedSpecies")
+            local species = speciesFolder:FindFirstChild(speciesName)
+            if species and species:IsA("BoolValue") then
+                species.Value = true
+            end
+        end
+    })
+end
+
+-- Unreleased Species Section
+SurviTab:CreateSection("Unreleased Species")
+
+SurviTab:CreateButton({
+    Name = "Unequip Selected Specie",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local speciesDataFolder = player:WaitForChild("SpeciesData")
+        local species = speciesDataFolder:FindFirstChild("Species")
+
+        if species and species:IsA("StringValue") then
+            species.Value = "ThisSpecieDoesNotExist"
+        end
+    end
+})
+
+local unreleasedSpecies = {
+    {Name = "Demon", Value = "Demon"},
+    {Name = "Angel", Value = "Angel"},
+    {Name = "Siren", Value = "Siren"},
+    {Name = "Kitsune", Value = "Harvest Witch"},
+    {Name = "Kanima", Value = "Original Hybrid"},
+    {Name = "Hunter", Value = "Hunter"},
+    {Name = "Hellhound", Value = "Dark Siphoner"},
+    {Name = "Banshee", Value = "Banshee"}
+}
+
+for _, species in ipairs(unreleasedSpecies) do
+    SurviTab:CreateButton({
+        Name = "Equip " .. species.Name,
+        Callback = function()
+            local player = game:GetService("Players").LocalPlayer
+            local speciesDataFolder = player:WaitForChild("SpeciesData")
+            local speciesValue = speciesDataFolder:FindFirstChild("Species")
+
+            if speciesValue and speciesValue:IsA("StringValue") then
+                speciesValue.Value = species.Value
+            end
+        end
+    })
+end
+
+ExtrTab:CreateSection("Main TPS")
+
+ExtrTab:CreateButton({
+    Name = "Teleport To Dark Spawn",
+    Callback = function()
+        local mapFolder = workspace:FindFirstChild("Map")
+        local spawnRoom = mapFolder and mapFolder:FindFirstChild("SpawnRoom")
         local player = game.Players.LocalPlayer
-        local character = player.Character
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-        local originalPosition = humanoidRootPart.CFrame.Position
-        local teleporting = true
 
-        -- Check for DisplayGun and other conditions
-        local function checkConditions()
-            if character:FindFirstChild("DisplayGun") then
-                Rayfield:Notify({
-                    Title = "Warning",
-                    Content = "You can't use this in the lobby.",
-                    Duration = 6.5,
-                    Actions = {
-                        Ignore = { Name = "Close", Callback = function() end }
-                    }
-                })
-                return false
-            elseif humanoid.WalkSpeed == 20 or humanoid.WalkSpeed == 22.5 then
-                Rayfield:Notify({
-                    Title = "Warning",
-                    Content = "You can't use this while you are the slasher.",
-                    Duration = 6.5,
-                    Actions = {
-                        Ignore = { Name = "Close", Callback = function() end }
-                    }
-                })
-                return false
-            elseif humanoid.WalkSpeed == 16 then
-                Rayfield:Notify({
-                    Title = "Warning",
-                    Content = "You must be injured by the slasher to use this.",
-                    Duration = 6.5,
-                    Actions = {
-                        Ignore = { Name = "Close", Callback = function() end }
-                    }
-                })
-                return false
-            end
-            return true
-        end
-
-        -- Function to find a valid target player (excluding WalkSpeed 20 and 22.5)
-        local function findValidTargetPlayer()
-            for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-                if otherPlayer ~= player and otherPlayer.Character then
-                    local otherCharacter = otherPlayer.Character
-                    local otherHumanoid = otherCharacter:FindFirstChildOfClass("Humanoid")
-                    local otherHead = otherCharacter:FindFirstChild("Head")
-                    local healthGui = otherHead and otherHead:FindFirstChild("HealthGui")
-                    local displayGun = otherCharacter:FindFirstChild("DisplayGun")
-
-                    -- Only target if they don't have HealthGui, DisplayGun, and WalkSpeed is not 20 or 22.5
-                    if otherHumanoid and not healthGui and not displayGun and (otherHumanoid.WalkSpeed ~= 20 and otherHumanoid.WalkSpeed ~= 22.5) then
-                        return otherPlayer
-                    end
+        if spawnRoom then
+            -- Filter only SpawnLocations within SpawnRoom
+            local spawnLocations = {}
+            for _, child in ipairs(spawnRoom:GetChildren()) do
+                if child:IsA("SpawnLocation") then
+                    table.insert(spawnLocations, child)
                 end
             end
-            return nil
-        end
 
-        -- Function to teleport to a valid player
-        local function teleportToTarget(targetPlayer)
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                humanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+            -- Check if there are any SpawnLocations and teleport the player
+            if #spawnLocations > 0 and player.Character then
+                local randomSpawn = spawnLocations[math.random(1, #spawnLocations)]
+                
+                -- Teleport above the SpawnLocation
+                local abovePosition = randomSpawn.CFrame * CFrame.new(0, 5, 0) -- Adjust Y offset as needed
+                player.Character:SetPrimaryPartCFrame(abovePosition)
             end
-        end
-
-        -- Function to spam teleport to valid targets
-        local function spamTeleport()
-            local targetPlayer = findValidTargetPlayer()
-
-            -- Spam teleport to valid player
-            while teleporting do
-                if targetPlayer then
-                    teleportToTarget(targetPlayer)
-                else
-                    targetPlayer = findValidTargetPlayer() -- Find new target if conditions change
-                end
-
-                -- Check for ForceField
-                if character:FindFirstChild("ForceField") then
-                    teleporting = false
-                    humanoidRootPart.CFrame = CFrame.new(originalPosition) -- Teleport back to original position
-                    break
-                end
-                wait(0.05)
-            end
-        end
-
-        -- Check the conditions before teleporting
-        if checkConditions() then
-            spamTeleport()
         end
     end
 })
 
-SurviTab:CreateButton({
-    Name = "Heal A Player",
+ExtrTab:CreateButton({
+    Name = "Teleport To City Spawn",
     Callback = function()
-        local Players = game:GetService("Players")
-        local LocalPlayer = Players.LocalPlayer
-        local RunService = game:GetService("RunService")
-
-        local character = LocalPlayer.Character
-        local originalPosition
-
-        -- Save original position if the character and HumanoidRootPart exist
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            originalPosition = character.HumanoidRootPart.CFrame
-        end
-
-        local function TeleportToPlayer(targetPlayer)
-            local character = LocalPlayer.Character
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                local targetCharacter = targetPlayer.Character
-                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    -- Teleport the local player to the target player's position
-                    character.HumanoidRootPart.CFrame = targetCharacter.HumanoidRootPart.CFrame
-                end
-            end
-        end
-
-        local function HealSinglePlayer()
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer then
-                    local targetCharacter = player.Character
-                    if targetCharacter and targetCharacter:FindFirstChild("Head") then
-                        local healthGui = targetCharacter.Head:FindFirstChild("HealthGui")
-                        if healthGui then
-                            -- Teleport loop until HealthGui is gone
-                            while healthGui and healthGui.Parent do
-                                TeleportToPlayer(player)
-                                RunService.Stepped:Wait() -- Wait a frame to prevent script lag
-                                healthGui = targetCharacter.Head:FindFirstChild("HealthGui") -- Update to see if HealthGui is removed
-                            end
-                            -- Once HealthGui is gone, teleport back to original position
-                            if originalPosition and character and character:FindFirstChild("HumanoidRootPart") then
-                                character.HumanoidRootPart.CFrame = originalPosition
-                            end
-                            break -- Exit after teleporting to the first player with HealthGui
-                        end
-                    end
-                end
-            end
-        end
-
-        HealSinglePlayer()
-    end
-})
-
-local seslreek = SurviTab:CreateButton({
-    Name = "Spectate Slasher",
-    Callback = function()
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-        local camera = workspace.CurrentCamera
-        local spectateActive = true  -- Track if spectate is active
-
-        -- Function to reset camera to its original state
-        local function resetCamera()
-            camera.CameraType = Enum.CameraType.Custom
-            camera.CameraSubject = player.Character:FindFirstChild("Humanoid")
-            camera.FieldOfView = 70
-            player.CameraMaxZoomDistance = 128
-            player.CameraMinZoomDistance = 0
-            player.CameraMode = Enum.CameraMode.Classic
-        end
-
-        -- Function to check if there are players with specified walk speeds
-        local function hasPlayersWithWalkSpeed(speeds)
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p.Character and p.Character:FindFirstChild("Humanoid") then
-                    local humanoid = p.Character:FindFirstChild("Humanoid")
-                    if table.find(speeds, humanoid.WalkSpeed) then
-                        return true
-                    end
-                end
-            end
-            return false
-        end
-
-        -- Function to move the camera to a player with specified walk speeds
-        local function moveToPlayerWithWalkSpeed(speeds)
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p.Character and p.Character:FindFirstChild("Humanoid") then
-                    local humanoid = p.Character:FindFirstChild("Humanoid")
-                    if table.find(speeds, humanoid.WalkSpeed) then
-                        camera.CameraSubject = p.Character
-                        player.CameraMode = Enum.CameraMode.Classic  -- Ensure camera mode is Classic
-                        return
-                    end
-                end
-            end
-        end
-
-        -- Function to create and handle the exit button
-        local function createExitButton()
-            local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-            local button = Instance.new("TextButton", screenGui)
-            local uiCorner = Instance.new("UICorner", button)
-            
-            button.Size = UDim2.new(0, 250, 0, 75)
-            button.Position = UDim2.new(0.5, -125, 0.8, 0)
-            button.Text = "EXIT"
-            button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            button.TextColor3 = Color3.fromRGB(255, 255, 255)
-            button.Font = Enum.Font.GothamBlack
-            button.TextScaled = true
-            button.TextStrokeTransparency = 0
-            button.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-            
-            uiCorner.CornerRadius = UDim.new(0, 15)
-
-            button.MouseButton1Click:Connect(function()
-                resetCamera()
-                screenGui:Destroy()  -- Destroy the exit button
-                spectateActive = false  -- End spectating
-            end)
-        end
-
-        -- Function to monitor player's death and reset camera
-        local function monitorPlayerDeath()
-            local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
-            if humanoid then
-                humanoid.Died:Connect(function()
-                    resetCamera()
-                    -- Destroy the button on death
-                    local playerGui = player:FindFirstChild("PlayerGui")
-                    if playerGui then
-                        local screenGui = playerGui:FindFirstChild("ScreenGui")
-                        if screenGui then
-                            screenGui:Destroy()
-                        end
-                    end
-                    spectateActive = false  -- End spectating
-                end)
-            end
-        end
-
-        -- Function to monitor players' walk speed and reset the camera
-        local function monitorWalkSpeed()
-            while spectateActive do
-                if not hasPlayersWithWalkSpeed({20, 22.5}) then
-                    resetCamera()
-                    -- Destroy the exit button if it's still present
-                    local playerGui = player:FindFirstChild("PlayerGui")
-                    if playerGui then
-                        local screenGui = playerGui:FindFirstChild("ScreenGui")
-                        if screenGui then
-                            screenGui:Destroy()
-                        end
-                    end
-                    break
-                end
-                task.wait(5)  -- Check every 5 seconds
-            end
-        end
-
-        -- Check if there are players with the specified walk speeds
-        if hasPlayersWithWalkSpeed({20, 22.5}) then
-            moveToPlayerWithWalkSpeed({20, 22.5})  -- Move camera to the player
-            createExitButton()  -- Create the exit button
-            task.spawn(monitorWalkSpeed)  -- Start monitoring the players' walk speeds
-            monitorPlayerDeath()  -- Start monitoring player's death
-        else
-            -- Show notification if no player is found with the specified walk speeds
-            Rayfield:Notify({
-                Title = "Notice!",
-                Content = "Please Wait Until The Slasher Spawns Or Is Selected To Spectate.",
-                Duration = 6.5,
-                Image = nil,
-                Actions = {
-                    Ignore = {
-                        Name = "Ok",
-                        Callback = function() end
-                    }
-                }
-            })
-        end
-    end,
-})
-
-SurviTab:CreateSection("Fake GamePass Perks")
-
-SurviTab:CreateButton({
-    Name = "Fake SpeedJuice Simulation",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        local humanoid = player.Character.Humanoid
-        local originalSpeed = humanoid.WalkSpeed
-        
-        humanoid.WalkSpeed = 25
-        wait(6.5)
-        humanoid.WalkSpeed = originalSpeed
-    end
-})
-
-SurviTab:CreateButton({
-    Name = "Fake SpeedShake Simulation",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        local humanoid = player.Character.Humanoid
-        local originalSpeed = humanoid.WalkSpeed
-        
-        humanoid.WalkSpeed = 32
-        wait(4.5)
-        humanoid.WalkSpeed = originalSpeed
-    end
-})
-
-SurviTab:CreateButton({
-    Name = "Fake DobuleJump Simulation",
-    Callback = function()
-        local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
-local character
-local humanoid
- 
-local canDoubleJump = false
-local hasDoubleJumped = false
-local oldPower
-local time_delay = 0.2
-local jump_multiplier = 1 
-function onJumpRequest()
-	if not character or not humanoid or not character:IsDescendantOf(workspace) or humanoid:GetState() == Enum.HumanoidStateType.Dead then
-		return
-	end
- 
-	if canDoubleJump and not hasDoubleJumped then
-		hasDoubleJumped = true
-		humanoid.JumpPower = oldPower * jump_multiplier
-		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-	end
-end
- 
-local function characterAdded(new)
-	character = new
-	humanoid = new:WaitForChild("Humanoid")
-	hasDoubleJumped = false
-	canDoubleJump = false
-	oldPower = humanoid.JumpPower
- 
-	humanoid.StateChanged:connect(function(old, new)
-		if new == Enum.HumanoidStateType.Landed then
-			canDoubleJump = false
-			hasDoubleJumped = false
-			humanoid.JumpPower = oldPower
-		elseif new == Enum.HumanoidStateType.Freefall then
-			wait(time_delay)
-			canDoubleJump = true
-		end
-	end)
-end
- 
-if player.Character then
-	characterAdded(player.Character)	
-end
- 
-player.CharacterAdded:connect(characterAdded)
-UIS.JumpRequest:connect(onJumpRequest)
+local targetPosition = Vector3.new(-240.2942657470703, 9.570392608642578, -146.6822509765625)
+
+player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
     end
 })
 
-SlrTab:CreateSection("Slasher Perks")
+ExtrTab:CreateSection("City TPS")
 
--- Create the button
-SlrTab:CreateButton({
-    Name = "Slash All",
+ExtrTab:CreateButton({
+    Name = "Teleport To MysticGrill",
     Callback = function()
-
-        local players = game:GetService("Players")
-        local localPlayer = players.LocalPlayer
-
-        -- Check the player's WalkSpeed
-        local function checkValidWalkSpeed()
-            local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
-            if humanoid then
-                local walkSpeed = humanoid.WalkSpeed
-                return walkSpeed == 20 or walkSpeed == 22.5
-            end
-            return false
-        end
-
-        -- If WalkSpeed is not valid, send notification and stop execution
-        if not checkValidWalkSpeed() then
-            Rayfield:Notify({
-                    Title = "Warning",
-                    Content = "You must be the slasher to use this.",
-                    Duration = 6.5,
-                    Actions = {
-                        Ignore = { Name = "Close", Callback = function() end }
-                    }
-                })
-            return -- Stop the script from running
-        end
-
-        local originalPositions = {}
-
-        -- Equip the only tool in the local player's inventory
-        local function equipOnlyTool()
-            local backpack = localPlayer:WaitForChild("Backpack")
-            local tool = backpack:FindFirstChildOfClass("Tool")
-            if tool then
-                tool.Parent = localPlayer.Character
-            end
-        end
-
-        -- Equip the tool before doing anything else
-        equipOnlyTool()
-
-        -- Check if the player has a tool
-        local function hasTool()
-            local backpack = localPlayer:WaitForChild("Backpack")
-            return backpack:FindFirstChildOfClass("Tool") or (localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Tool"))
-        end
-
-        -- Store the original positions of all players
-        for _, otherPlayer in ipairs(players:GetPlayers()) do
-            if otherPlayer ~= localPlayer and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                originalPositions[otherPlayer] = otherPlayer.Character.HumanoidRootPart.CFrame
-            end
-        end
-
-        -- Bring all players close to the local player
-        local bringConnection
-        bringConnection = game:GetService("RunService").Heartbeat:Connect(function()
-            for _, otherPlayer in ipairs(players:GetPlayers()) do
-                if otherPlayer ~= localPlayer and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    otherPlayer.Character.HumanoidRootPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -2)
-                end
-            end
-        end)
-
-        -- Simulate an autoclicker that clicks 2 times per 0.1 seconds
-        local function startAutoClicker()
-            local clickConnection
-            clickConnection = game:GetService("RunService").Heartbeat:Connect(function()
-                for i = 1, 2 do
-                    -- Simulate a click
-                    mouse1click() -- Simulates a left mouse click
-                end
-                wait(0.05) -- Wait to match 2 clicks per 0.1 seconds
-            end)
-
-            -- Continuously check for tool in inventory and stop when no tool is left
-            spawn(function()
-                while hasTool() do
-                    wait(0.1)
-                end
-
-                -- Disconnect autoclicker and stop bringing players once no tool is found
-                if clickConnection then
-                    clickConnection:Disconnect()
-                end
-                if bringConnection then
-                    bringConnection:Disconnect()
-                end
-                Rayfield:Notify({
-                    Title = "Slashed All!",
-                    Content = "All Players Have Been Killed.",
-                    Duration = 5,
-                    Image = nil
-                })
-            end)
-        end
-
-        -- Start the autoclicker
-        startAutoClicker()
-
-    end
-})
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
--- Slasher Vision Button
-local slrbstm = SlrTab:CreateToggle({
-    Name = "Slasher Vision",
-    CurrentValue = false,
-    Flag = "RedVisionToggle",
-    Callback = function(Value)
-        local player = game.Players.LocalPlayer
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-
-        if not humanoid then
-            return -- Exit if no humanoid is found
-        end -- end if not humanoid
-
-        if Value then
-            -- Set screen red
-            local redOverlay = Instance.new("ScreenGui", player.PlayerGui)
-            redOverlay.Name = "RedOverlay"
-            redOverlay.IgnoreGuiInset = true
-
-            local redFrame = Instance.new("Frame", redOverlay)
-            redFrame.Size = UDim2.new(1, 0, 1, 0)
-            redFrame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            redFrame.BackgroundTransparency = 0.7
-        else
-            -- Remove red screen when toggled off
-            if player.PlayerGui:FindFirstChild("RedOverlay") then
-                player.PlayerGui.RedOverlay:Destroy()
-            end -- end if RedOverlay exists
-        end -- end if Value
-    end -- end callback function
-}) -- end CreateToggle for Slasher Vision
-
-SlrTab:CreateSection("Fake GamePass Perks")
-
-SlrTab:CreateButton({
-    Name = "Fake Extra Slasher Speed",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        local humanoid = player.Character.Humanoid
-        
-        humanoid.WalkSpeed = 22.5
-    end
-})
-
-SlrTab:CreateButton({
-    Name = "Fake DobuleJump Simulation",
-    Callback = function()
-        local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
-local character
-local humanoid
- 
-local canDoubleJump = false
-local hasDoubleJumped = false
-local oldPower
-local time_delay = 0.2
-local jump_multiplier = 1 
-function onJumpRequest()
-	if not character or not humanoid or not character:IsDescendantOf(workspace) or humanoid:GetState() == Enum.HumanoidStateType.Dead then
-		return
-	end
- 
-	if canDoubleJump and not hasDoubleJumped then
-		hasDoubleJumped = true
-		humanoid.JumpPower = oldPower * jump_multiplier
-		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-	end
-end
- 
-local function characterAdded(new)
-	character = new
-	humanoid = new:WaitForChild("Humanoid")
-	hasDoubleJumped = false
-	canDoubleJump = false
-	oldPower = humanoid.JumpPower
- 
-	humanoid.StateChanged:connect(function(old, new)
-		if new == Enum.HumanoidStateType.Landed then
-			canDoubleJump = false
-			hasDoubleJumped = false
-			humanoid.JumpPower = oldPower
-		elseif new == Enum.HumanoidStateType.Freefall then
-			wait(time_delay)
-			canDoubleJump = true
-		end
-	end)
-end
- 
-if player.Character then
-	characterAdded(player.Character)	
-end
- 
-player.CharacterAdded:connect(characterAdded)
-UIS.JumpRequest:connect(onJumpRequest)
+local targetPosition = Vector3.new(-191.7035675048828, 10.64358901977539, 185.60047912597656)
+
+player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
     end
 })
 
-ExtrTab:CreateSection("TP")
+ExtrTab:CreateButton({
+    Name = "Teleport To Mai's Store",
+    Callback = function()
+local player = game.Players.LocalPlayer
+local targetPosition = Vector3.new(-268.9493564453125, 9.028172492980957, 199.57943725585938)
+
+player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+    end
+})
 
 ExtrTab:CreateButton({
-    Name = "Teleport To Lobby",
+    Name = "Teleport To Library",
     Callback = function()
+local player = game.Players.LocalPlayer
+local targetPosition = Vector3.new(-236.8478240966797, 9.37256908416748, 353.8052062988281)
+
+player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+    end
+})
+
+ExtrTab:CreateButton({
+    Name = "Teleport Inside Tomb",
+    Callback = function()
+        local targetPosition = Vector3.new(-294.5696, -7.6207, 122.6822)
         local player = game.Players.LocalPlayer
-        local character = player.Character
-        local lobbySpawns = game.Workspace:FindFirstChild("Lobby"):FindFirstChild("LobbySpawns")
 
-        if lobbySpawns and character then
-            local spawnPoints = lobbySpawns:GetChildren()
-            local randomSpawn = spawnPoints[math.random(1, #spawnPoints)]
-            if randomSpawn:IsA("BasePart") then
-                character:MoveTo(randomSpawn.Position)
-            end
+        if player.Character and player.Character.PrimaryPart then
+            player.Character:SetPrimaryPartCFrame(CFrame.new(targetPosition))
         end
     end
 })
 
 ExtrTab:CreateButton({
-    Name = "Teleport To Current Map",
+    Name = "Teleport Outside Tomb",
     Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        local survivorSpawns = game.Workspace:FindFirstChild("CurrentMap"):FindFirstChild("SurvivorSpawns")
+local player = game.Players.LocalPlayer
+local targetPosition = Vector3.new(-315.47467041015625, -4.335916042327881, 123.9755859375)
 
-        if survivorSpawns and character then
-            local spawnPoints = survivorSpawns:GetChildren()
-            local randomSpawn = spawnPoints[math.random(1, #spawnPoints)]
-            if randomSpawn:IsA("BasePart") then
-                character:MoveTo(randomSpawn.Position)
-            end
-        end
+player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
     end
 })
 
 ExtrTab:CreateButton({
-    Name = "Teleport To VIP Club (MUST UNLOCK FIRST)",
+    Name = "Teleport Inside Roof Of Mystic Grill",
     Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        local survivorSpawns = game.Workspace:FindFirstChild("Lobby"):FindFirstChild("LargeSofa")
+local player = game.Players.LocalPlayer
+local targetPosition = Vector3.new(-165.95254516601562, 25.194843292236328, 184.7862548828125)
 
-        if survivorSpawns and character then
-            local spawnPoints = survivorSpawns:GetChildren()
-            local randomSpawn = spawnPoints[math.random(1, #spawnPoints)]
-            if randomSpawn:IsA("BasePart") then
-                character:MoveTo(randomSpawn.Position)
-            end
-        end
+player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
     end
 })
-
-ExtrTab:CreateParagraph({Title = "", Content = "Teleport To VIP Club: You Must Go To The Game Tab And Unlock The Vip Club For This To Work."})
 
 ExtrTab:CreateButton({
-    Name = "Teleport To Slasher",
+    Name = "Teleport Inside Roof Of Mai's Store",
     Callback = function()
-        -- Find the player with 20 walk speed
-        local targetPlayer = nil
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            if player.Character and player.Character:FindFirstChild("Humanoid") then
-                local humanoid = player.Character.Humanoid
-                if humanoid.WalkSpeed == 20 then
-                    targetPlayer = player
-                    break
-                end
-            end
-        end
+local player = game.Players.LocalPlayer
+local targetPosition = Vector3.new(-272.27288818359375, 22.349416732788086, 199.7329559326172)
 
-        -- Teleport the player to the target player
-        if targetPlayer then
-            local localPlayer = game.Players.LocalPlayer
-            if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                localPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-            end
-        else
-            warn("Slasher has not been picked yet!.")
-        end
+player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
     end
 })
+ExtrTab:CreateSection("Player TPS")
 
 ExtrTab:CreateButton({
     Name = "Teleport To Random Player",
     Callback = function()
         local players = game:GetService("Players")
         local localPlayer = players.LocalPlayer
-        local blacklist = {} -- List to store players to avoid teleporting to
-        
-        -- Function to check if player is blacklisted
-        local function isBlacklisted(player)
-            for _, blacklistedPlayer in ipairs(blacklist) do
-                if blacklistedPlayer == player then
-                    return true
-                end
-            end
-            return false
-        end
 
-        -- Function to teleport to a player
         local function teleportToPlayer(player)
             if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 localPlayer.Character:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame)
             end
         end
 
-        -- Populate blacklist based on WalkSpeed condition
-        for _, player in pairs(players:GetPlayers()) do
-            if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
-                local walkSpeed = player.Character.Humanoid.WalkSpeed
-                if walkSpeed == 20 or walkSpeed == 22.5 then
-                    table.insert(blacklist, player)
-                end
-            end
-        end
-
-        -- Get a list of valid players for teleporting
+        -- Find players with "OverHead" in their Head part
         local validPlayers = {}
         for _, player in pairs(players:GetPlayers()) do
-            if player ~= localPlayer and player.Character and not player.Character:FindFirstChild("DisplayGun") and not isBlacklisted(player) then
+            if player ~= localPlayer 
+                and player.Character 
+                and player.Character:FindFirstChild("Head") 
+                and player.Character.Head:FindFirstChild("OverHead") then
                 table.insert(validPlayers, player)
             end
         end
@@ -1506,28 +1080,31 @@ ExtrTab:CreateButton({
             local randomPlayer = validPlayers[math.random(1, #validPlayers)]
             teleportToPlayer(randomPlayer)
         else
-            print("No valid players found.")
+            print("No valid players found with OverHead.")
         end
     end
 })
 
+-- Teleport to Random Player Button
 ExtrTab:CreateButton({
-    Name = "Teleport To Random Player (Lobby)",
+    Name = "Teleport To Random Player (Dark Spawn)",
     Callback = function()
         local players = game:GetService("Players")
         local localPlayer = players.LocalPlayer
 
-        -- Function to teleport to a player
         local function teleportToPlayer(player)
             if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 localPlayer.Character:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame)
             end
         end
 
-        -- Get a list of players that have DisplayGun
+        -- Find players without "OverHead" in their Head part
         local validPlayers = {}
         for _, player in pairs(players:GetPlayers()) do
-            if player ~= localPlayer and player.Character and player.Character:FindFirstChild("DisplayGun") then
+            if player ~= localPlayer 
+                and player.Character 
+                and player.Character:FindFirstChild("Head") 
+                and not player.Character.Head:FindFirstChild("OverHead") then
                 table.insert(validPlayers, player)
             end
         end
@@ -1537,35 +1114,22 @@ ExtrTab:CreateButton({
             local randomPlayer = validPlayers[math.random(1, #validPlayers)]
             teleportToPlayer(randomPlayer)
         else
-            print("No.")
+            print("No valid players found without OverHead.")
         end
     end
 })
 
-ExtrTab:CreateParagraph({Title = "", Content = "Teleport To Random Player (Lobby): Teleports You To Players That Are JUST in the lobby."})
+-- Teleport Information Paragraph
+ExtrTab:CreateParagraph({Title = "Info", Content = "Teleport To Random Player (Dark Spawn): Teleports You To Players That Are JUST In The Main Spawn Area."})
 
-ExtrTab:CreateButton({
-    Name = "Teleport To Slasher Spawn",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        local survivorSpawns = game.Workspace:FindFirstChild("CurrentMap"):FindFirstChild("KillerSpawns")
+-- Section for Other
+ExtrTab:CreateSection("Other")
 
-        if survivorSpawns and character then
-            local spawnPoints = survivorSpawns:GetChildren()
-            local randomSpawn = spawnPoints[math.random(1, #spawnPoints)]
-            if randomSpawn:IsA("BasePart") then
-                character:MoveTo(randomSpawn.Position)
-            end
-        end
-    end
-})
-
+-- Click To Teleport Toggle
 local clickDetector = Instance.new("ClickDetector") -- Create a click detector
 local indicatorActive = false
 local teleportConnection
 
--- Toggle for activating the click detector and teleportation
 ExtrTab:CreateToggle({
     Name = "Click To Teleport",
     Callback = function(state)
@@ -1600,292 +1164,381 @@ ExtrTab:CreateToggle({
     end
 })
 
-GameTab:CreateSection("Game")
+SigmaTab:CreateSection("Useful Stuff")
 
-local screenGui
-
-GameTab:CreateToggle({
-    Name = "Info",
-    Callback = function(state)
-        if state then
-            -- Create the screen GUI only if it doesn't exist
-            if not screenGui then
-                screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer.PlayerGui)
-
-                -- Slasher Label
-                local slasherTextLabel = Instance.new("TextLabel", screenGui)
-                slasherTextLabel.Size = UDim2.new(0, 250, 0, 50)
-                slasherTextLabel.Position = UDim2.new(0, 20, 1, -170)
-                slasherTextLabel.BackgroundTransparency = 1
-                slasherTextLabel.TextSize = 30
-                slasherTextLabel.Font = Enum.Font.GothamBold
-                slasherTextLabel.TextStrokeTransparency = 0.8
-                slasherTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-                slasherTextLabel.Text = "Slasher: Waiting..."
-
-                -- Role Label
-                local roleTextLabel = Instance.new("TextLabel", screenGui)
-                roleTextLabel.Size = UDim2.new(0, 250, 0, 50)
-                roleTextLabel.Position = UDim2.new(0, 20, 1, -120)
-                roleTextLabel.BackgroundTransparency = 1
-                roleTextLabel.TextSize = 30
-                roleTextLabel.Font = Enum.Font.GothamBold
-                roleTextLabel.TextStrokeTransparency = 0.8
-                roleTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-                roleTextLabel.Text = "Your Role: Waiting..."
-
-                -- Distance Label (moved to the right)
-                local distanceTextLabel = Instance.new("TextLabel", screenGui)
-                distanceTextLabel.Size = UDim2.new(0, 250, 0, 50)
-                distanceTextLabel.Position = UDim2.new(0, 189, 1, -70) -- Closer to the right
-                distanceTextLabel.BackgroundTransparency = 1
-                distanceTextLabel.TextSize = 30
-                distanceTextLabel.Font = Enum.Font.GothamBold
-                distanceTextLabel.TextStrokeTransparency = 0.8
-                distanceTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-                distanceTextLabel.Text = "Your Distance From Slasher: Waiting..."
-
-                -- Update Labels Continuously
-                while state do
-                    wait(1)
-
-                    -- Get slasher player
-                    local slasher = nil
-                    for _, player in pairs(game.Players:GetPlayers()) do
-                        local character = player.Character
-                        if character and character:FindFirstChild("Humanoid") then
-                            local walkspeed = character.Humanoid.WalkSpeed
-                            if walkspeed == 20 or walkspeed == 22.5 then
-                                slasher = player
-                                break
-                            end
-                        end
-                    end
-
-                    -- Update Slasher Label
-                    if slasher then
-                        slasherTextLabel.Text = "Slasher: " .. slasher.Name
-                        slasherTextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red when slasher is found
-                    else
-                        slasherTextLabel.Text = "Slasher: Waiting..."
-                        slasherTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White when waiting
-                    end
-
-                    -- Update Role Label
-                    local localPlayer = game.Players.LocalPlayer
-                    local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
-                    if humanoid then
-                        local walkspeed = humanoid.WalkSpeed
-                        local hasDisplayGun = localPlayer.Character:FindFirstChild("DisplayGun") ~= nil
-                        if walkspeed == 20 or walkspeed == 22.5 then
-                            roleTextLabel.Text = "Your Role: Slasher"
-                            roleTextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red for Slasher
-                        elseif hasDisplayGun then
-                            roleTextLabel.Text = "Your Role: Waiting..."
-                        else
-                            roleTextLabel.Text = "Your Role: Survivor"
-                            roleTextLabel.TextColor3 = Color3.fromRGB(0, 255, 0) -- Green for Survivor
-                        end
-                    end
-
-                    -- Update Distance Label
-                    if slasher then
-                        local slasherPos = slasher.Character.HumanoidRootPart.Position
-                        local playerPos = localPlayer.Character.HumanoidRootPart.Position
-                        local distance = (playerPos - slasherPos).Magnitude
-                        if distance <= 50 then
-                            distanceTextLabel.Text = "Your Distance From Slasher: Close (" .. math.floor(distance) .. " studs)"
-                            distanceTextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red for close
-                        elseif distance <= 100 then
-                            distanceTextLabel.Text = "Your Distance From Slasher: Away (" .. math.floor(distance) .. " studs)"
-                            distanceTextLabel.TextColor3 = Color3.fromRGB(255, 165, 0) -- Orange for away
-                        else
-                            distanceTextLabel.Text = "Your Distance From Slasher: Far (" .. math.floor(distance) .. " studs)"
-                            distanceTextLabel.TextColor3 = Color3.fromRGB(0, 255, 0) -- Green for far
-                        end
-                    else
-                        distanceTextLabel.Text = "Your Distance From Slasher: Waiting..."
-                        distanceTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White when waiting
-                    end
-                end
-            end
+SigmaTab:CreateToggle({
+    Name = "GodMode/Immortality",
+    Callback = function(toggleState)
+        local player = game:GetService("Players").LocalPlayer
+        local diedEffects = player.Character.OtherScripts.DiedEffects
+        if toggleState then
+            diedEffects.Enabled = false  -- Toggle ON
         else
-            -- Destroy the screen GUI and its labels when toggle is off
-            if screenGui then
-                screenGui:Destroy()
-                screenGui = nil  -- Make sure it can be recreated when toggled back on
-            end
+            diedEffects.Enabled = true   -- Toggle OFF
         end
     end
 })
 
-GameTab:CreateButton({
-    Name = "Remove Barriers (Lobby)",
+SigmaTab:CreateButton({
+    Name = "Open Witch Book/Grimoire",
     Callback = function()
-        local workspace = game:GetService("Workspace")
-        local lobbyFolder = workspace:FindFirstChild("Lobby")
-
-        if lobbyFolder then
-            -- Remove the "Invis" model if it exists
-            local invisModel = lobbyFolder:FindFirstChild("Invis")
-            if invisModel and invisModel:IsA("Model") then
-                invisModel:Destroy()
-            end
-
-            -- Check for and delete 5 parts named "Part"
-            local partsRemoved = 0
-            for _, item in ipairs(workspace:GetChildren()) do
-                if item:IsA("BasePart") and item.Name == "Part" then
-                    item:Destroy()
-                    partsRemoved = partsRemoved + 1
-                    if partsRemoved >= 5 then
-                        break
-                    end
-                end
-            end
-        end
+    game:GetService("ReplicatedStorage").Events.Grimoire:FireServer()
     end
 })
 
-GameTab:CreateParagraph({Title = "", Content = "Remove Barriers (Lobby): Removes All Barriers In The LOBBY Only."})
+SigmaTab:CreateParagraph({Title = "Note:", Content = "Must be Witch, Siphoner or Heretic To Use Buttons Below."})
 
-GameTab:CreateButton({
-    Name = "Remove Barriers (Current Map)",
+SigmaTab:CreateButton({
+    Name = "Self Revive (Must Be On Otherside)",
     Callback = function()
-        local workspace = game:GetService("Workspace")
-        local currentMap = workspace:FindFirstChild("CurrentMap")
-        local invisWalls = nil
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer  -- Get the local player
+        local corpseName = player.Name .. " Corpse"  -- Define the corpse name
 
-        if currentMap then
-            -- First search in the 'Other' folder
-            local otherFolder = currentMap:FindFirstChild("Other")
-            if otherFolder then
-                invisWalls = otherFolder:FindFirstChild("InvisWalls")
-            end
-
-            -- If not found, search in the 'Extra' model
-            if not invisWalls then
-                local extraModel = currentMap:FindFirstChild("Extra")
-                if extraModel and extraModel:IsA("Model") then
-                    invisWalls = extraModel:FindFirstChild("InvisWalls")
-                end
-            end
-
-            -- If still not found, search directly in 'CurrentMap'
-            if not invisWalls then
-                invisWalls = currentMap:FindFirstChild("InvisWalls")
-            end
-
-            -- If found, destroy the model
-            if invisWalls and invisWalls:IsA("Model") then
-                invisWalls:Destroy()
-            end
-        end
-    end
-})
-
-GameTab:CreateParagraph({Title = "", Content = "Remove Barriers (Current Map): Removes All Barriers In The CURRENT Map Only."})
-
-GameTab:CreateButton({
-    Name = "Collect All Coins",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        local hrp = character:WaitForChild("HumanoidRootPart")
-        local mapFolder = workspace:FindFirstChild("CurrentMap")
+        -- Look for a model named "MyUsername Corpse" in the workspace
+        local corpse = game.Workspace:FindFirstChild(corpseName)
         
-        if mapFolder then
-            local coinsModel = mapFolder:FindFirstChild("Coins")
-            if coinsModel then
-                local coins = coinsModel:GetChildren()
-                
-                local function collectCoin(coin)
-                    if coin:IsA("BasePart") then
-                        coin.CFrame = hrp.CFrame -- Move coin to player
-                        firetouchinterest(coin, hrp, 0)
-                        coin.CFrame = coin.CFrame * CFrame.new(0, 50, 0) -- Move coin back
-                        firetouchinterest(coin, hrp, 1)
-                    end
-                end
-                
-                for _, coin in ipairs(coins) do
-                    collectCoin(coin)
-                end
-            end
-        end
-    end
-})
+        if corpse and corpse:IsA("Model") and corpse:FindFirstChild("HumanoidRootPart") then
+            -- Teleport to the corpse's position
+            player.Character.HumanoidRootPart.CFrame = corpse.HumanoidRootPart.CFrame
 
-GameTab:CreateToggle({
-    Name = "Auto Collect Coins",
-    Default = false,
-    Callback = function(state)
-        toggle = state
-        
-        if toggle and not collecting then
-            collecting = true
-
-            spawn(function()
-                game.Players.LocalPlayer.CharacterAdded:Connect(function()
-                    if toggle then
-                        collecting = false -- Reset collecting after respawn
-                        wait(1) -- Ensure character is fully loaded
-                        toggle = true -- Resume auto collection after respawn
-                        collecting = true -- Re-enable collecting loop
-                    end
-                end)
-
-                while toggle do
-                    local player = game.Players.LocalPlayer
-                    local character = player.Character or player.CharacterAdded:Wait()
-                    local hrp = character:WaitForChild("HumanoidRootPart")
-                    local mapFolder = workspace:FindFirstChild("CurrentMap")
-
-                    if mapFolder then
-                        local coinsModel = mapFolder:FindFirstChild("Coins")
-                        if coinsModel then
-                            for _, coin in pairs(coinsModel:GetChildren()) do
-                                if not toggle then break end
-                                if coin:IsA("BasePart") then
-                                    -- Move coin to player
-                                    coin.CFrame = hrp.CFrame
-                                    firetouchinterest(coin, hrp, 0)
-                                    -- Move coin back
-                                    coin.CFrame = coin.CFrame * CFrame.new(0, 50, 0)
-                                    firetouchinterest(coin, hrp, 1)
-                                end
-                            end
-                        end
-                    end
-                    task.wait(0.01) -- Fast loop to minimize delays
-                end
-                collecting = false
-            end)
+            -- Fire the event only for the local player
+            ReplicatedStorage.Events.ResWitch:FireServer(player)
         else
-            collecting = false
+            print("Corpse not found.")
         end
     end
 })
 
--- Define a function for better organization
-local function unlockVIPClub()
-    local workspace = game:GetService("Workspace")
-    local ClubBlock = workspace:FindFirstChild("ClubBlock")
-    
-    if ClubBlock then
-        ClubBlock:Destroy()
-    else
-        warn("ClubBlock not found!")
+SigmaTab:CreateButton({
+    Name = "Revive Player (Must Be Dear Dead Body)",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Events.ResWitch:FireServer()
+    end
+})
+
+MainTab:CreateInput({
+   Name = "Strangle Specific Player",
+   CurrentValue = "",
+   PlaceholderText = "Username",
+   RemoveTextAfterFocusLost = false,
+   Flag = "Input1",
+   Callback = function(Text)
+   -- The function that takes place when the input is changed
+   -- The variable (Text) is a string for the value in the text box
+   end,
+})
+
+SigmaTab:CreateButton({
+    Name = "Create A LightBall That Follows You",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Post:FireServer(character)
+    end
+end
+    end
+})
+
+SigmaTab:CreateButton({
+    Name = "Cover Your Skin In Vervain",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Cutis:FireServer(character)
+    end
+end
+    end
+})
+
+SigmaTab:CreateButton({
+    Name = "Turn Invisible For A Few Seconds",
+    Callback = function()
+game.ReplicatedStorage.Events.Invisique:FireServer()
+    end
+})
+
+SigmaTab:CreateButton({
+    Name = "Regenerate Blood",
+    Callback = function()
+        for i = 1, 10 do
+    game:GetService("ReplicatedStorage").Events.BloodBag:FireServer()
+end
+    end
+})
+
+SigmaTab:CreateParagraph({Title = "Note:", Content = "Must be Vampire, Original, Heretic Or Hybrid To Use Buttons Below."})
+
+SigmaTab:CreateButton({
+    Name = "Remove Fire From Your Body",
+    Callback = function()
+    game:GetService("ReplicatedStorage").Events.Extinguo:FireServer()
+    end
+})
+
+SigmaTab:CreateButton({
+    Name = "Turn Humanity Off",
+    Callback = function()
+game.Players.LocalPlayer.Character.Abilities.Vampire.NoHumanity.Remote:FireServer()
+    end
+})
+
+-- GameTab Section
+GameTab:CreateSection("ServerSide & Trolls")
+
+GameTab:CreateButton({
+    Name = "Generate Angels NPC In Mystic Grill",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.FriendSpawner:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateParagraph({Title = "Generate Angels NPC In Mystic Grill:", Content = "Don't spam this button because you might be kicked off the game and it will get very laggy."})
+
+GameTab:CreateButton({
+    Name = "Crash/Lag Server (Affects Everyone)",
+    Callback = function()
+        for i = 1, 1000 do
+    game:GetService("ReplicatedStorage").Events.BloodBag:FireServer()
+end
+    end
+})
+
+GameTab:CreateParagraph({Title = "Note:", Content = "Must be Witch, Siphoner or Heretic To Use Buttons Below."})
+
+GameTab:CreateButton({
+    Name = "Cast Whole Server In Fire",
+    Callback = function()
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+local function fireEventForAllPlayers()
+    for _, player in pairs(Players:GetPlayers()) do
+        ReplicatedStorage.Events.Incendia:FireServer(player.Character)
     end
 end
 
--- Create the button
-GameTab:CreateButton({
-    Name = "Unlock VIP Club",
-    Callback = unlockVIPClub,
+fireEventForAllPlayers()
+    end
 })
 
-elseif currentGameId ~= correctGameId then
-    local TeleportService = game:GetService("TeleportService")
-    TeleportService:Teleport(1022605215, game.Players.LocalPlayer)
+GameTab:CreateButton({
+    Name = "Cast Whole Server In Fire (MASSIVE)",
+    Callback = function()
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+local function fireEventForAllPlayers()
+    for _, player in pairs(Players:GetPlayers()) do
+        ReplicatedStorage.Events.Incendia:FireServer(player.Character)
+    end
 end
+
+for i = 1, 15 do
+    fireEventForAllPlayers()
+    wait(0.5)
+end
+    end
+})
+
+SigmaTab:CreateButton({
+    Name = "Wut",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Motus:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Make Whole Server To Go To Sleep",
+    Callback = function()
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+local function fireEventForAllPlayers()
+    for _, player in pairs(Players:GetPlayers()) do
+        ReplicatedStorage.Events.AdSomnum:FireServer(player.Character)
+    end
+end
+
+fireEventForAllPlayers()
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Crack Whole Servers Bones",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Bone:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Annoy Whole Server",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Exousia:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Push Everyone Away From You",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Ictus:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Immobile Whole Server For A Few Seconds",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Immobilus:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Trap Every Single User In A Fire Circle",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Incendiamos:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Strike Whole Server With Lightning",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Lecutio:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Give Pain To The Whole Server",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Poena:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Mute The Whole Server For A Few Seconds",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Silencio:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Strangle The Whole Server",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Strangle:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateParagraph({Title = "Note:", Content = "Must be Vampire, Original, Hybrid Or Heretic To Use Buttons Below."})
+
+GameTab:CreateButton({
+    Name = "Give Whole Server Blood",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.BloodOffer:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Compulse Whole Server",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Compulsion:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Annoy Whole Server",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.EyeGorge:FireServer(character)
+    end
+end
+    end
+})
+
+GameTab:CreateButton({
+    Name = "Feast From Whole Server",
+    Callback = function()
+for _, player in ipairs(game.Players:GetPlayers()) do
+    local character = player.Character
+    if character and player.Name ~= game.Players.LocalPlayer.Name then
+        game:GetService("ReplicatedStorage").Events.Feed:FireServer(character)
+    end
+end
+    end
+})
+
+-- EventTab Sections
+EvntTab:CreateSection("Info")
+EvntTab:CreateParagraph({Title = "Supernatural Hub Developer", Content = "Castiel Aka Angelus."})
+EvntTab:CreateParagraph({Title = "Support & Discord", Content = "https://discord.gg/ZHpN6hAFnu"})
+EvntTab:CreateParagraph({Title = "Ban Risk", Content = "75%"})
+EvntTab:CreateParagraph({Title = "Exploit Patches", Content = "0!"})
+EvntTab:CreateParagraph({Title = "Note From Developer", Content = "Admins Are Watching, Be careful When You Exploit Supernatural!"})
