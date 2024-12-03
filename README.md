@@ -124,7 +124,72 @@ end)
 
 -- Create the toggle
 MainTab:CreateToggle({
-    Name = "Ctrl To Sprint (Goes 60% Faster Than Vampires)",
+    Name = "Shift To Sprint (Better Then Normal Run)",
+    Callback = function(state)
+    local userInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local sprinting = false
+local normalWalkSpeed = 16  -- Default walk speed
+local sprintWalkSpeed = 52  -- Sprint speed
+local defaultFOV = 70       -- Default camera FOV
+local sprintFOV = 100       -- Camera FOV when sprinting
+local tweenTime = 0.5       -- Time for the FOV transition
+local inputBeganConnection, inputEndedConnection
+
+-- Function to smoothly change FOV
+local function tweenFOV(camera, targetFOV)
+    local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    local goal = {FieldOfView = targetFOV}
+    local tween = TweenService:Create(camera, tweenInfo, goal)
+    tween:Play()
+end
+        -- Get player and character
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        local camera = workspace.CurrentCamera
+
+        if state then
+            -- Start handling sprinting
+            inputBeganConnection = userInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+                if not gameProcessedEvent and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
+                    humanoid.WalkSpeed = sprintWalkSpeed
+                    tweenFOV(camera, sprintFOV)  -- Smooth FOV increase
+                    sprinting = true
+                end
+            end)
+
+            inputEndedConnection = userInputService.InputEnded:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+                    humanoid.WalkSpeed = normalWalkSpeed
+                    tweenFOV(camera, defaultFOV)  -- Smooth FOV reset
+                    sprinting = false
+                end
+            end)
+        else
+            -- Stop handling sprinting
+            if inputBeganConnection then
+                inputBeganConnection:Disconnect()
+                inputBeganConnection = nil
+            end
+            if inputEndedConnection then
+                inputEndedConnection:Disconnect()
+                inputEndedConnection = nil
+            end
+
+            -- Reset walk speed and FOV if player is sprinting
+            if sprinting then
+                humanoid.WalkSpeed = normalWalkSpeed
+                tweenFOV(camera, defaultFOV)  -- Smooth FOV reset
+                sprinting = false
+            end
+        end
+    end
+})
+
+-- Create the toggle
+MainTab:CreateToggle({
+    Name = "Shift To Sprint (60% Faster Then Vampires)",
     Callback = function(state)
     local userInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
