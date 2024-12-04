@@ -1,11 +1,23 @@
--- List of banned user IDs
 local bannedIDs = {
-    345673454,  -- Replace with actual user IDs
-    34567234523,
-    456789123
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123,
+    123
 }
 
--- Function to check if the player is banned
 local function checkBan(userId)
     for _, bannedId in ipairs(bannedIDs) do
         if userId == bannedId then
@@ -15,15 +27,13 @@ local function checkBan(userId)
     return false
 end
 
--- Get Local Player and Check Ban Before Running Script
 local localPlayer = game.Players.LocalPlayer
 
 if checkBan(localPlayer.UserId) then
-    localPlayer:Kick("You have been banned off the GUI. Reason: ")
-    return -- Stop the script from running any further
+    localPlayer:Kick("Banned Off The HUB!")
+    return
 end
 
--- Rest of the script only runs if the player is NOT banned
 print("SuperNatural Script: Loading..")
 print("Loaded!")
 
@@ -32,29 +42,29 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Create the main window
 local Window = Rayfield:CreateWindow({
-    Name = "SUPERNATURAL HUB",
-    LoadingTitle = "SuperNatural",
-    LoadingSubtitle = "By Castiel",
+    Name = "SUPERNATURAL [BETA🩸] HUB",
+    LoadingTitle = "SUPERNATURAL [BETA🩸]",
+    LoadingSubtitle = "Loading..",
     ConfigurationSaving = {
         Enabled = true,
         FolderName = nil,
         FileName = "SUPERNATURAL HUB"
     },
     Discord = {
-        Enabled = false,
-        Invite = "H66dDfrS4Q",
-        RememberJoins = false 
+        Enabled = true,
+        Invite = "ZHpN6hAFnu",
+        RememberJoins = true 
     },
     KeySystem = false
 })
 
 -- Create tabs
-local MainTab = Window:CreateTab("Local & Main", nil)
+local MainTab = Window:CreateTab("Main", nil)
 local SurviTab = Window:CreateTab("Species", nil)
 local ESTab = Window:CreateTab("ESP", nil)
 local ExtrTab = Window:CreateTab("TP", nil)
 local SigmaTab = Window:CreateTab("Game", nil)
-local GameTab = Window:CreateTab("Trolling", nil)
+local GameTab = Window:CreateTab("Troll", nil)
 local EvntTab = Window:CreateTab("Info", nil)
 
 -- Show a notification
@@ -122,117 +132,33 @@ end)
         end
 })
 
--- Create the toggle
 MainTab:CreateToggle({
-    Name = "Shift To Sprint (Better Then Normal Run)",
+    Name = "Ctrl To Sprint (60% Faster Then Vampires)",
     Callback = function(state)
-    local userInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local sprinting = false
-local normalWalkSpeed = 16  -- Default walk speed
-local sprintWalkSpeed = 52  -- Sprint speed
-local defaultFOV = 70       -- Default camera FOV
-local sprintFOV = 100       -- Camera FOV when sprinting
-local tweenTime = 0.5       -- Time for the FOV transition
-local inputBeganConnection, inputEndedConnection
-
--- Function to smoothly change FOV
-local function tweenFOV(camera, targetFOV)
-    local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-    local goal = {FieldOfView = targetFOV}
-    local tween = TweenService:Create(camera, tweenInfo, goal)
-    tween:Play()
-end
-        -- Get player and character
+        local userInputService = game:GetService("UserInputService")
+        local TweenService = game:GetService("TweenService")
         local player = game.Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
         local humanoid = character:WaitForChild("Humanoid")
         local camera = workspace.CurrentCamera
+        local normalWalkSpeed = 16  -- Default walk speed
+        local sprintWalkSpeed = 160  -- Sprint speed
+        local defaultFOV = 70       -- Default camera FOV
+        local sprintFOV = 100       -- Camera FOV when sprinting
+        local tweenTime = 0.5       -- Time for the FOV transition
+        local inputBeganConnection, inputEndedConnection
+        local sprintEnabled = state  -- Use this to track toggle state
 
-        if state then
-            -- Start handling sprinting
-            inputBeganConnection = userInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-                if not gameProcessedEvent and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
-                    humanoid.WalkSpeed = sprintWalkSpeed
-                    tweenFOV(camera, sprintFOV)  -- Smooth FOV increase
-                    sprinting = true
-                end
-            end)
-
-            inputEndedConnection = userInputService.InputEnded:Connect(function(input)
-                if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
-                    humanoid.WalkSpeed = normalWalkSpeed
-                    tweenFOV(camera, defaultFOV)  -- Smooth FOV reset
-                    sprinting = false
-                end
-            end)
-        else
-            -- Stop handling sprinting
-            if inputBeganConnection then
-                inputBeganConnection:Disconnect()
-                inputBeganConnection = nil
-            end
-            if inputEndedConnection then
-                inputEndedConnection:Disconnect()
-                inputEndedConnection = nil
-            end
-
-            -- Reset walk speed and FOV if player is sprinting
-            if sprinting then
-                humanoid.WalkSpeed = normalWalkSpeed
-                tweenFOV(camera, defaultFOV)  -- Smooth FOV reset
-                sprinting = false
-            end
+        -- Function to smoothly change FOV
+        local function tweenFOV(camera, targetFOV)
+            local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+            local goal = {FieldOfView = targetFOV}
+            local tween = TweenService:Create(camera, tweenInfo, goal)
+            tween:Play()
         end
-    end
-})
 
--- Create the toggle
-MainTab:CreateToggle({
-    Name = "Shift To Sprint (60% Faster Then Vampires)",
-    Callback = function(state)
-    local userInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local sprinting = false
-local normalWalkSpeed = 16  -- Default walk speed
-local sprintWalkSpeed = 160  -- Sprint speed
-local defaultFOV = 70       -- Default camera FOV
-local sprintFOV = 100       -- Camera FOV when sprinting
-local tweenTime = 0.5       -- Time for the FOV transition
-local inputBeganConnection, inputEndedConnection
-
--- Function to smoothly change FOV
-local function tweenFOV(camera, targetFOV)
-    local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-    local goal = {FieldOfView = targetFOV}
-    local tween = TweenService:Create(camera, tweenInfo, goal)
-    tween:Play()
-end
-        -- Get player and character
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        local humanoid = character:WaitForChild("Humanoid")
-        local camera = workspace.CurrentCamera
-
-        if state then
-            -- Start handling sprinting
-            inputBeganConnection = userInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-                if not gameProcessedEvent and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
-                    humanoid.WalkSpeed = sprintWalkSpeed
-                    tweenFOV(camera, sprintFOV)  -- Smooth FOV increase
-                    sprinting = true
-                end
-            end)
-
-            inputEndedConnection = userInputService.InputEnded:Connect(function(input)
-                if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
-                    humanoid.WalkSpeed = normalWalkSpeed
-                    tweenFOV(camera, defaultFOV)  -- Smooth FOV reset
-                    sprinting = false
-                end
-            end)
-        else
-            -- Stop handling sprinting
+        -- Clean up connections and reset
+        local function cleanup()
             if inputBeganConnection then
                 inputBeganConnection:Disconnect()
                 inputBeganConnection = nil
@@ -242,12 +168,26 @@ end
                 inputEndedConnection = nil
             end
 
-            -- Reset walk speed and FOV if player is sprinting
-            if sprinting then
-                humanoid.WalkSpeed = normalWalkSpeed
-                tweenFOV(camera, defaultFOV)  -- Smooth FOV reset
-                sprinting = false
-            end
+            humanoid.WalkSpeed = normalWalkSpeed
+            tweenFOV(camera, defaultFOV)
+        end
+
+        if sprintEnabled then
+            inputBeganConnection = userInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+                if not gameProcessedEvent and sprintEnabled and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
+                    humanoid.WalkSpeed = sprintWalkSpeed
+                    tweenFOV(camera, sprintFOV)
+                end
+            end)
+
+            inputEndedConnection = userInputService.InputEnded:Connect(function(input)
+                if sprintEnabled and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
+                    humanoid.WalkSpeed = normalWalkSpeed
+                    tweenFOV(camera, defaultFOV)
+                end
+            end)
+        else
+            cleanup()
         end
     end
 })
@@ -322,6 +262,64 @@ MainTab:CreateButton({
         jumpPowerSlider:Set(50)
     end
 })
+
+MainTab:CreateSection("Protection")
+
+local staffProtectionToggle = false
+local staffProtectionConnection
+local localPlayer = game.Players.LocalPlayer
+
+-- Main toggle for staff protection
+local protect = MainTab:CreateToggle({
+    Name = "Leave If Admin Joins",
+    CurrentValue = true,
+    Callback = function(state)
+        staffProtectionToggle = state
+
+        local targetUserIDs = {
+            [508919854] = true,
+            [1663428852] = true,
+            [915981954] = true,
+            [2424185565] = true,
+            [987726614] = true,
+            [311815303] = true,
+            [2000642250] = true,
+            [2005042816] = true,
+            [1355582012] = true,
+            [1905910897] = true,
+            [3214278278] = true,
+            [4800203581] = true,
+            [3745285961] = true,
+            [4248433865] = true,
+            [3925365453] = true,
+            [1583324135] = true,
+            [1465646886] = true
+        }
+
+        local function kickPlayerIfNeeded(joinedPlayer)
+            if targetUserIDs[joinedPlayer.UserId] then
+                localPlayer:Kick("An Admin From This Game Has Joined Your Server, You Have Been Kicked For Your Safety.")
+            end
+        end
+
+        if state then
+            -- Check existing players
+            for _, existingPlayer in ipairs(game.Players:GetPlayers()) do
+                kickPlayerIfNeeded(existingPlayer)
+            end
+
+            -- Check new players
+            staffProtectionConnection = game.Players.PlayerAdded:Connect(kickPlayerIfNeeded)
+        else
+            if staffProtectionConnection then
+                staffProtectionConnection:Disconnect()
+                staffProtectionConnection = nil
+            end
+        end
+    end
+})
+
+MainTab:CreateParagraph({Title = "", Content = "Leave If Admin Joins: Automatically Kicks You If Admin Joins."})
 
 MainTab:CreateSection("Extra")
 
@@ -429,139 +427,6 @@ MainTab:CreateToggle({
         chatFrame.ChatBarParentFrame.Position = chatFrame.ChatChannelParentFrame.Position + UDim2.new(0, 0, chatFrame.ChatChannelParentFrame.Size.Y.Scale, chatFrame.ChatChannelParentFrame.Size.Y.Offset)
     end
 })
-
-MainTab:CreateSection("Protection")
-
-local staffProtectionToggle = false
-local staffProtectionConnection
-local localPlayer = game.Players.LocalPlayer
-
--- Main toggle for staff protection
-MainTab:CreateToggle({
-    Name = "Leave If Admin Joins",
-    CurrentValue = false,
-    Callback = function(state)
-        staffProtectionToggle = state
-
-        local targetUserIDs = {
-            [508919854] = true,
-            [1663428852] = true,
-            [915981954] = true,
-            [2424185565] = true,
-            [987726614] = true,
-            [311815303] = true,
-            [2000642250] = true,
-            [2005042816] = true,
-            [1355582012] = true,
-            [1905910897] = true,
-            [3214278278] = true,
-            [4800203581] = true,
-            [3745285961] = true,
-            [4248433865] = true,
-            [3925365453] = true,
-            [1583324135] = true,
-            [1465646886] = true
-        }
-
-        local function kickPlayerIfNeeded(joinedPlayer)
-            if targetUserIDs[joinedPlayer.UserId] then
-                localPlayer:Kick("An Admin From This Game Has Joined Your Server, You Have Been Kicked For Your Safety.")
-            end
-        end
-
-        if state then
-            -- Check existing players
-            for _, existingPlayer in ipairs(game.Players:GetPlayers()) do
-                kickPlayerIfNeeded(existingPlayer)
-            end
-
-            -- Check new players
-            staffProtectionConnection = game.Players.PlayerAdded:Connect(kickPlayerIfNeeded)
-        else
-            if staffProtectionConnection then
-                staffProtectionConnection:Disconnect()
-                staffProtectionConnection = nil
-            end
-        end
-    end
-})
-
-MainTab:CreateParagraph({Title = "", Content = "Kick If Admin Joins: Automatically Kicks You If Admin Joins."})
-
-local staffProtectionToggle = false
-local staffProtectionConnection
-local localPlayer = game.Players.LocalPlayer
-
--- Main toggle for staff protection
-MainTab:CreateToggle({
-    Name = "Leave If Admin Joins (OPTIONAL)",
-    CurrentValue = false,
-    Callback = function(state)
-        staffProtectionToggle = state
-
-        local targetUserIDs = {
-            [508919854] = true,
-            [1663428852] = true,
-            [915981954] = true,
-            [2424185565] = true,
-            [987726614] = true,
-            [311815303] = true,
-            [2000642250] = true,
-            [2005042816] = true,
-            [1355582012] = true,
-            [1905910897] = true,
-            [3214278278] = true,
-            [4800203581] = true,
-            [3745285961] = true,
-            [4248433865] = true,
-            [3925365453] = true,
-            [1583324135] = true,
-            [1465646886] = true
-        }
-
-        local function handlePlayer(joinedPlayer)
-            if targetUserIDs[joinedPlayer.UserId] then
-                -- Show a notification with Yes and No buttons
-                Rayfield:Notify({
-                    Title = "Admin Joined Alert!",
-                    Content = "An Admin has joined your game. Do you want to leave?",
-                    Duration = 3600,
-                    Image = nil,
-                    Actions = {
-                        Yes = {
-                            Name = "Yes",
-                            Callback = function()
-                                localPlayer:Kick("An Admin From This Game Has Joined Your Server, You Choose To Be Kicked For Your Safety.")
-                            end
-                        },
-                        No = {
-                            Name = "No",
-                            Callback = function()
-                            end
-                        }
-                    }
-                })
-            end
-        end
-
-        if state then
-            -- Check existing players
-            for _, existingPlayer in ipairs(game.Players:GetPlayers()) do
-                handlePlayer(existingPlayer)
-            end
-
-            -- Check new players
-            staffProtectionConnection = game.Players.PlayerAdded:Connect(handlePlayer)
-        else
-            if staffProtectionConnection then
-                staffProtectionConnection:Disconnect()
-                staffProtectionConnection = nil
-            end
-        end
-    end
-})
-
-MainTab:CreateParagraph({Title = "", Content = "Kick If Admin Joins 2: Alerts You And Gives Option To Leave If Admin Joins."})
 
 ESTab:CreateSection("ESP")
 
@@ -766,6 +631,204 @@ local espToggle = false
 local espConnection
 
 ESTab:CreateToggle({
+    Name = "ESP By Rank",
+    CurrentValue = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer
+
+        espToggle = state
+
+        if espToggle then
+            local RunService = game:GetService("RunService")
+            local Camera = game:GetService("Workspace").CurrentCamera
+            local LocalPlayer = Players.LocalPlayer
+
+            local rankColors = {
+                Guest = Color3.fromRGB(255, 255, 255),              -- White
+                Player = Color3.fromRGB(173, 216, 230),            -- Light Blue
+                Tester = Color3.fromRGB(204, 153, 255),            -- Light Smooth Purple
+                ["Main Tester"] = Color3.fromRGB(255, 69, 0),      -- Orangish Red
+                ["Content Creator"] = Color3.fromRGB(255, 102, 102), -- Light Smooth Red
+                ["Trial Dev"] = Color3.fromRGB(144, 238, 144),     -- Light Green
+                ["Trial Developer"] = Color3.fromRGB(144, 238, 144), -- Light Green
+                Developer = Color3.fromRGB(0, 0, 255),             -- Blue
+                Staff = Color3.fromRGB(255, 255, 102),             -- Light Smooth Yellow
+                ["Head Staff"] = Color3.fromRGB(255, 153, 51),     -- Light Smooth Orange
+                Founder = Color3.fromRGB(255, 223, 0),             -- Golden Yellow
+            }
+
+            local function createESP(player, rank, color)
+                local character = player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local highlight = Instance.new("Highlight", character)
+                    highlight.Name = "ESP"
+                    highlight.Adornee = character
+                    highlight.FillTransparency = 0.5
+                    highlight.OutlineTransparency = 0
+                    highlight.FillColor = color
+                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0) -- Black outline
+
+                    -- Create name tag
+                    local head = character:FindFirstChild("Head")
+                    if head then
+                        local billboardGui = Instance.new("BillboardGui", head)
+                        billboardGui.Name = "NameTag"
+                        billboardGui.AlwaysOnTop = true
+                        billboardGui.Size = UDim2.new(0, 200, 0, 50)
+                        billboardGui.StudsOffset = Vector3.new(0, 2, 0)
+
+                        local textLabel = Instance.new("TextLabel", billboardGui)
+                        textLabel.Text = rank
+                        textLabel.Font = Enum.Font.SourceSansBold
+                        textLabel.TextSize = 14
+                        textLabel.TextColor3 = color
+                        textLabel.BackgroundTransparency = 1
+                        textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    end
+                end
+            end
+
+            local function updateESP()
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
+                        local overhead = player.Character:FindFirstChild("Head"):FindFirstChild("OverHead")
+                        if overhead then
+                            local rankLabel = overhead:FindFirstChild("Rank")
+                            if rankLabel and rankLabel:IsA("TextLabel") then
+                                local rank = rankLabel.Text
+                                local color = rankColors[rank]
+                                if color then
+                                    local esp = player.Character:FindFirstChild("ESP")
+                                    if esp then
+                                        esp.FillColor = color
+                                    else
+                                        createESP(player, rank, color)
+                                    end
+
+                                    local nameTag = player.Character:FindFirstChild("Head"):FindFirstChild("NameTag")
+                                    if nameTag and nameTag:FindFirstChild("TextLabel") then
+                                        nameTag.TextLabel.Text = rank
+                                        nameTag.TextLabel.TextColor3 = color
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+
+            espConnection = RunService.Heartbeat:Connect(updateESP)
+        else
+            if espConnection then
+                espConnection:Disconnect()
+            end
+
+            -- Remove all ESP elements
+            for _, player in pairs(Players:GetPlayers()) do
+                if player.Character then
+                    local espOutline = player.Character:FindFirstChild("ESP")
+                    local nameTag = player.Character:FindFirstChild("Head"):FindFirstChild("NameTag")
+                    if espOutline then
+                        espOutline:Destroy()
+                    end
+                    if nameTag then
+                        nameTag:Destroy()
+                    end
+                end
+            end
+        end
+    end
+})
+
+local espToggle = false
+local espConnection
+
+ESTab:CreateToggle({
+    Name = "ESP By Gender",
+    CurrentValue = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+
+        espToggle = state
+
+        local genderColors = {
+            Male = Color3.fromRGB(173, 216, 230), -- Light Blue
+            Female = Color3.fromRGB(255, 182, 193) -- Light Pink
+        }
+
+        local function createESP(player, gender, color)
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                -- Highlight setup
+                local highlight = character:FindFirstChild("ESP") or Instance.new("Highlight", character)
+                highlight.Name = "ESP"
+                highlight.Adornee = character
+                highlight.FillTransparency = 0.5
+                highlight.OutlineTransparency = 0
+                highlight.FillColor = color
+                highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+
+                -- Name tag setup
+                local head = character:FindFirstChild("Head")
+                if head then
+                    local billboardGui = head:FindFirstChild("NameTag") or Instance.new("BillboardGui", head)
+                    billboardGui.Name = "NameTag"
+                    billboardGui.AlwaysOnTop = true
+                    billboardGui.Size = UDim2.new(0, 200, 0, 50)
+                    billboardGui.StudsOffset = Vector3.new(0, 2, 0)
+
+                    local textLabel = billboardGui:FindFirstChild("TextLabel") or Instance.new("TextLabel", billboardGui)
+                    textLabel.Text = gender
+                    textLabel.Font = Enum.Font.SourceSansBold
+                    textLabel.TextSize = 14
+                    textLabel.TextColor3 = color
+                    textLabel.BackgroundTransparency = 1
+                    textLabel.Size = UDim2.new(1, 0, 1, 0)
+                end
+            end
+        end
+
+        local function updateESP()
+            for _, player in pairs(Players:GetPlayers()) do
+                local genderFolder = player:FindFirstChild("GenderData")
+                if genderFolder and genderFolder:IsA("Folder") then
+                    local genderValue = genderFolder:FindFirstChildWhichIsA("StringValue")
+                    if genderValue and genderColors[genderValue.Value] then
+                        createESP(player, genderValue.Value, genderColors[genderValue.Value])
+                    end
+                end
+            end
+        end
+
+        if espToggle then
+            updateESP()
+            espConnection = game:GetService("RunService").Heartbeat:Connect(updateESP)
+        else
+            if espConnection then
+                espConnection:Disconnect()
+            end
+
+            for _, player in pairs(Players:GetPlayers()) do
+                if player.Character then
+                    local espOutline = player.Character:FindFirstChild("ESP")
+                    local nameTag = player.Character:FindFirstChild("Head"):FindFirstChild("NameTag")
+                    if espOutline then
+                        espOutline:Destroy()
+                    end
+                    if nameTag then
+                        nameTag:Destroy()
+                    end
+                end
+            end
+        end
+    end
+})
+
+local espToggle = false
+local espConnection
+
+ESTab:CreateToggle({
     Name = "ESP Friends",
     CurrentValue = false,
     Callback = function(state)
@@ -846,6 +909,46 @@ ESTab:CreateToggle({
 
 SurviTab:CreateParagraph({Title = "Note", Content = "All Species Unlocked By This Tab Will Disappear From Inventory Once You Leave The Game!"})
 
+local shuffleToggle = false
+local shuffleConnection
+
+SurviTab:CreateToggle({
+    Name = "Infinite Shuffles",
+    CurrentValue = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
+        shuffleToggle = state
+
+        local function monitorShuffleData()
+            if LocalPlayer then
+                local shuffleFolder = LocalPlayer:FindFirstChild("ShuffleData")
+                if shuffleFolder and shuffleFolder:IsA("Folder") then
+                    local shufflesValue = shuffleFolder:FindFirstChild("Shuffles")
+                    if shufflesValue and shufflesValue:IsA("IntValue") then
+                        if shufflesValue.Value ~= 100 then
+                            shufflesValue.Value = 100
+                        end
+                    end
+                end
+            end
+        end
+
+        if shuffleToggle then
+            -- Set the value to 100 initially
+            monitorShuffleData()
+            -- Start monitoring for changes
+            shuffleConnection = game:GetService("RunService").Heartbeat:Connect(monitorShuffleData)
+        else
+            if shuffleConnection then
+                shuffleConnection:Disconnect()
+                shuffleConnection = nil
+            end
+        end
+    end
+})
+
 SurviTab:CreateSection("Shuffle Species")
 
 -- Show a notification
@@ -918,7 +1021,7 @@ SurviTab:CreateButton({
     Callback = function()
         local player = game:GetService("Players").LocalPlayer
         local speciesFolder = player:WaitForChild("OwnedSpecies")
-        local speciesList = {"Phoenix", "Original", "Demon"}
+        local speciesList = {"Phoenix", "Original"}
 
         for _, speciesName in ipairs(speciesList) do
             local species = speciesFolder:FindFirstChild(speciesName)
@@ -946,6 +1049,56 @@ SurviTab:CreateButton({
 })
 
 local gamepassSpecies = {"Phoenix", "Original"}
+for _, speciesName in ipairs(gamepassSpecies) do
+    SurviTab:CreateButton({
+        Name = "Unlock " .. speciesName,
+        Callback = function()
+            local player = game:GetService("Players").LocalPlayer
+            local speciesFolder = player:WaitForChild("OwnedSpecies")
+            local species = speciesFolder:FindFirstChild(speciesName)
+            if species and species:IsA("BoolValue") then
+                species.Value = true
+            end
+        end
+    })
+end
+
+-- Gamepass & Other Species Section
+SurviTab:CreateSection("Available Unreleased Species")
+
+SurviTab:CreateButton({
+    Name = "Get All Available Unreleased Species",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local speciesFolder = player:WaitForChild("OwnedSpecies")
+        local speciesList = {"Demon"}
+
+        for _, speciesName in ipairs(speciesList) do
+            local species = speciesFolder:FindFirstChild(speciesName)
+            if species and species:IsA("BoolValue") then
+                species.Value = true
+            end
+        end
+    end
+})
+
+SurviTab:CreateButton({
+    Name = "Remove All Available Unreleased Species",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local speciesFolder = player:WaitForChild("OwnedSpecies")
+        local speciesList = {"Demon"}
+
+        for _, speciesName in ipairs(speciesList) do
+            local species = speciesFolder:FindFirstChild(speciesName)
+            if species and species:IsA("BoolValue") then
+                species.Value = false
+            end
+        end
+    end
+})
+
+local gamepassSpecies = {"Demon"}
 for _, speciesName in ipairs(gamepassSpecies) do
     SurviTab:CreateButton({
         Name = "Unlock " .. speciesName,
@@ -1232,7 +1385,7 @@ ExtrTab:CreateToggle({
 SigmaTab:CreateSection("Useful Stuff")
 
 SigmaTab:CreateToggle({
-    Name = "GodMode/Immortality",
+    Name = "Godmode/Immortality",
     Callback = function(toggleState)
         local player = game:GetService("Players").LocalPlayer
         local diedEffects = player.Character.OtherScripts.DiedEffects
@@ -1606,4 +1759,4 @@ EvntTab:CreateParagraph({Title = "Supernatural Hub Developer", Content = "Castie
 EvntTab:CreateParagraph({Title = "Support & Discord", Content = "https://discord.gg/ZHpN6hAFnu"})
 EvntTab:CreateParagraph({Title = "Ban Risk", Content = "75%"})
 EvntTab:CreateParagraph({Title = "Exploit Patches", Content = "0!"})
-EvntTab:CreateParagraph({Title = "Note From Developer", Content = "Admins Are Watching, Be careful When You Exploit Supernatural!"})
+EvntTab:CreateParagraph({Title = "Note From Hub Developer", Content = "Admins Are Watching, Be careful When You Exploit Supernatural!"})
