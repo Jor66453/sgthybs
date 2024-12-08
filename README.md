@@ -1117,6 +1117,19 @@ end
 SurviTab:CreateSection("Unreleased Species")
 
 SurviTab:CreateButton({
+    Name = "Bypass Kick (Recommended)",
+    Callback = function()
+        game:GetService("Players").LocalPlayer.PlayerGui.MainMenu.SpeciesFrame.Spawn.LocalScript.Enabled = false
+
+wait(0.5)
+
+game:GetService("Players").LocalPlayer.PlayerGui.MainMenu.SpeciesFrame.Spawn.LocalScript.RemoteEvent:FireServer()
+    end
+})
+
+SurviTab:CreateParagraph({Title = "Bypass Kick (Recommended)", Content = "This Will Automatically Spawn You Into The Game Without Being Kicked."})
+
+SurviTab:CreateButton({
     Name = "Unequip Selected Specie",
     Callback = function()
         local player = game:GetService("Players").LocalPlayer
@@ -1755,7 +1768,7 @@ end
 
 -- EventTab Sections
 EvntTab:CreateSection("Info")
-EvntTab:CreateParagraph({Title = "Supernatural Hub Developer", Content = "Castiel Aka Angelus."})
+EvntTab:CreateParagraph({Title = "Supernatural Hub Developer", Content = "Castiel."})
 EvntTab:CreateParagraph({Title = "Support & Discord", Content = "https://discord.gg/ZHpN6hAFnu"})
 EvntTab:CreateParagraph({Title = "Ban Risk", Content = "75%"})
 EvntTab:CreateParagraph({Title = "Exploit Patches", Content = "0!"})
