@@ -749,6 +749,7 @@ ESTab:CreateToggle({
     CurrentValue = false,
     Callback = function(state)
         local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
 
         espToggle = state
 
@@ -758,6 +759,8 @@ ESTab:CreateToggle({
         }
 
         local function createESP(player, gender, color)
+            if player == LocalPlayer then return end -- Skip the local player
+
             local character = player.Character
             if character and character:FindFirstChild("HumanoidRootPart") then
                 -- Highlight setup
@@ -791,6 +794,8 @@ ESTab:CreateToggle({
 
         local function updateESP()
             for _, player in pairs(Players:GetPlayers()) do
+                if player == LocalPlayer then continue end -- Skip the local player
+
                 local genderFolder = player:FindFirstChild("GenderData")
                 if genderFolder and genderFolder:IsA("Folder") then
                     local genderValue = genderFolder:FindFirstChildWhichIsA("StringValue")
