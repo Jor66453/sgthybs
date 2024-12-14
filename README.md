@@ -1,26 +1,13 @@
-local bannedIDs = {
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123,
-    123
+local whitelistedIDs = {
+    1716548835,
+    456789123,
+    987654321,
+    123456789
 }
 
-local function checkBan(userId)
-    for _, bannedId in ipairs(bannedIDs) do
-        if userId == bannedId then
+local function checkWhitelist(userId)
+    for _, whitelistedId in ipairs(whitelistedIDs) do
+        if userId == whitelistedId then
             return true
         end
     end
@@ -29,11 +16,13 @@ end
 
 local localPlayer = game.Players.LocalPlayer
 
-if checkBan(localPlayer.UserId) then
-    localPlayer:Kick("Banned Off The HUB!")
+-- Ensure whitelist check runs before anything else
+if not checkWhitelist(localPlayer.UserId) then
+    localPlayer:Kick("You are not approved to use this GUI! Please DM 'grimerah' aka Castiel in Discord to get approved.")
     return
 end
 
+-- Proceed with the rest of the script
 print("SuperNatural Script: Loading..")
 print("Loaded!")
 
@@ -42,7 +31,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Create the main window
 local Window = Rayfield:CreateWindow({
-    Name = "SUPERNATURAL [BETA] HUB",
+    Name = "SUPERNATURAL [BETA🩸] HUB",
     LoadingTitle = "SUPERNATURAL [BETA🩸]",
     LoadingSubtitle = "Loading..",
     ConfigurationSaving = {
@@ -57,6 +46,8 @@ local Window = Rayfield:CreateWindow({
     },
     KeySystem = false
 })
+
+-- Add additional tabs and features as needed below
 
 -- Create tabs
 local MainTab = Window:CreateTab("Main", nil)
