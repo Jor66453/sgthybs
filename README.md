@@ -22,7 +22,6 @@ if not checkWhitelist(localPlayer.UserId) then
     return
 end
 
--- Proceed with the rest of the script
 print("SuperNatural Script: Loading..")
 print("Loaded!")
 
