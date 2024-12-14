@@ -49,7 +49,6 @@ local Window = Rayfield:CreateWindow({
 -- Add additional tabs and features as needed below
 
 -- Create tabs
-local MainTab = Window:CreateTab("Main", nil)
 local SurviTab = Window:CreateTab("Species", nil)
 local ESTab = Window:CreateTab("ESP", nil)
 local ExtrTab = Window:CreateTab("TP", nil)
